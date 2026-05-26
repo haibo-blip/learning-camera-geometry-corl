@@ -1,0 +1,51 @@
+\documentclass{article}
+
+\usepackage{corl_2026}
+% \usepackage[final]{corl_2026}
+% \usepackage[preprint]{corl_2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+
+\title{Learning Camera Geometry from Action and View Synthesis for Visuomotor Control}
+
+\author{
+  Anonymous Authors
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Visuomotor policies often rely on calibrated camera geometry when cameras move beyond a fixed training setup, while image-only policies avoid calibration but may learn view-specific shortcuts that can fail under camera shift. Explicit 3D and point-cloud pipelines provide geometric structure, but require depth, calibration, and separate reconstruction stages. This paper asks whether camera geometry can instead be learned inside the control objective. We study two end-to-end camera-aware imitation learning variants: an action policy that predicts camera poses and conditions its observation encoder on pose/ray tokens, and an NVS-regularized policy that adds a novel-view decoder over register-style observation tokens. The pose predictor is trained with a semi-supervised auxiliary loss using only a subset of pose labels, while action loss and, in the NVS variant, held-out view reconstruction jointly shape the learned geometry.
+
+On LIBERO-MV Spatial, partial pose supervision is sufficient for strong control: 10\% pose labels approaches calibrated PRoPE performance, and the best 50\% setting exceeds calibrated geometry-aware baselines. On MimicGen camera-shift evaluation, preliminary stack-three results show that NVS regularization improves tight-camera success over image-only and action-only camera-aware policies. These results suggest that camera geometry is most useful when optimized jointly with control, and that view-synthesis supervision can further regularize observation encoders without requiring an explicit 3D reconstruction pipeline.
+\end{abstract}
+
+\keywords{End-to-end camera geometry learning, Visuomotor control, Novel view synthesis}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Method}
+\input{sections/02_method}
+
+\section{Experiments}
+\input{sections/03_experiments}
+
+\section{Discussion}
+\input{sections/04_discussion}
+
+\section{Conclusion}
+\input{sections/05_conclusion}
+
+\clearpage
+\acknowledgments{Acknowledgments will be added in the final version.}
+
+% Add verified references to references.bib and uncomment when citations are inserted.
+% \bibliography{references}
+
+\end{document}

@@ -1,0 +1,57 @@
+\subsection{LIBERO-MV Spatial}
+
+The LIBERO-MV Spatial experiment isolates end-to-end camera-pose learning. The current sweep varies the fraction of training examples with ground-truth camera-pose labels. The 10\% setting already approaches calibrated PRoPE performance, while the best current 50\% setting exceeds the calibrated geometry-aware baselines available in the current result table.
+
+\begin{table}[h]
+  \centering
+  \caption{Current LIBERO-MV Spatial summary. Values are success rates from the local result tracker.}
+  \label{tab:libero}
+  \begin{tabular}{l c}
+    \toprule
+    Method & Spatial success \\
+    \midrule
+    ViT+CamID & 0.574 \\
+    Plucker-GT & 0.622 \\
+    PRoPE-GT & 0.842 \\
+    E2E pose-policy, best current setting & 0.865 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.82\linewidth]{figures/libero_mv_spatial_summary.png}
+  \caption{Draft LIBERO-MV Spatial figure showing the current GT-pose ratio sweep and calibrated baselines.}
+  \label{fig:libero}
+\end{figure}
+
+\subsection{MimicGen camera-shift evaluation}
+
+The MimicGen experiment evaluates train-camera and tight-camera success rates. The full evaluation is planned across four to five tasks. The preliminary stack-three result suggests that NVS regularization improves tight-camera generalization over image-only and action-only camera-aware policies.
+
+\begin{table}[h]
+  \centering
+  \caption{Preliminary MimicGen 100-demo stack-three result. This table should be replaced by the full 4--5 task evaluation when available.}
+  \label{tab:mimicgen-prelim}
+  \begin{tabular}{l c c}
+    \toprule
+    Method & Train camera SR & Tight camera SR \\
+    \midrule
+    ViT baseline & 0.20 & 0.00 \\
+    RayZer/action-only & 0.35 & 0.00 \\
+    Register-token NVS, GT camera pose & 0.55 & 0.25 \\
+    PRoPE NVS & 0.55 & 0.075 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.52\linewidth]{figures/mimicgen_prelim_stack.png}
+  \caption{Earlier compact MimicGen comparison figure. This is a placeholder until the full multi-task result figure is regenerated.}
+  \label{fig:mimicgen-prelim}
+\end{figure}
+
+\subsection{Planned baselines and ablations}
+
+The main MimicGen table should compare image Diffusion Policy, ManiFlow or another point-cloud baseline, the E2E camera-pose action policy, and the E2E camera-pose NVS policy. Ablations should separate the effect of joint pose learning, pose-label ratio, NVS regularization, and register-token versus PRoPE-style NVS.
