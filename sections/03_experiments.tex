@@ -27,22 +27,25 @@ The LIBERO-MV Spatial experiment isolates end-to-end camera-pose learning. The c
 
 \subsection{MimicGen camera-shift evaluation}
 
-The MimicGen experiment evaluates train-camera and tight-camera success rates. The full evaluation is planned across four to five tasks. The preliminary stack-three result suggests that NVS regularization improves tight-camera generalization over image-only and action-only camera-aware policies.
+The MimicGen experiment evaluates train-camera and tight-camera success rates. The current result table contains four partially complete tasks, with Hammer Cleanup still pending. Each cell reports train-set camera success followed by tight-set camera success. The current results suggest that register-token NVS improves over the action-only RayZer variant on Stack Three, Coffee, and Threading, while ManiFlow remains a strong point-cloud baseline on Stack.
 
 \begin{table}[h]
   \centering
-  \caption{Preliminary MimicGen 100-demo stack-three result. This table should be replaced by the full 4--5 task evaluation when available.}
+  \caption{Preliminary MimicGen 100-demo results. Each cell is train-camera / tight-camera success rate. Missing entries are left blank until the corresponding runs finish.}
   \label{tab:mimicgen-prelim}
-  \begin{tabular}{l c c}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{l c c c c c}
     \toprule
-    Method & Train camera SR & Tight camera SR \\
+    Method & Stack Three & Coffee & Threading & Stack & Hammer Cleanup \\
     \midrule
-    ViT baseline & 0.20 & 0.00 \\
-    RayZer/action-only & 0.35 & 0.00 \\
-    Register-token NVS, GT camera pose & 0.55 & 0.25 \\
-    PRoPE NVS & 0.55 & 0.075 \\
+    Diffusion Policy & 0.15 / 0.00 & 0.00 / 0.00 & 0.00 / 0.00 & 0.95 / 0.025 & -- \\
+    ManiFlow & 0.275 / 0.275 & 0.10 / 0.225 & 0.025 / 0.05 & 0.975 / 0.725 & -- \\
+    ViT & 0.20 / 0.00 & 0.00 / -- & 0.10 / 0.05 & -- & -- \\
+    RayZer/action-only & 0.30 / 0.00 & 0.025 / 0.00 & 0.05 / 0.00 & 0.975 / 0.025 & -- \\
+    RayZer + register NVS & 0.55 / 0.25 & 0.20 / 0.175 & 0.15 / 0.10 & -- & -- \\
     \bottomrule
   \end{tabular}
+  }
 \end{table}
 
 \begin{figure}[t]
