@@ -15,6 +15,6 @@ The paper makes three contributions. We formulate camera geometry learning as an
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/pipeline.png}
-  \caption{Overview of the two camera-aware policy variants. The action-only model learns a camera-pose-conditioned observation encoder from action loss and semi-supervised pose loss. The NVS model uses a register-style observation encoder trained with both action prediction and target-view reconstruction.}
+  \caption{Method overview. Two paired RGB observations are used to predict camera poses and construct ray features. The action-only variant trains a camera-pose-conditioned policy with action and episode-level pose losses, while the register-token NVS variant adds a register bottleneck and target-view reconstruction loss.}
   \label{fig:pipeline}
 \end{figure}
