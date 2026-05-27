@@ -34,14 +34,14 @@ The MimicGen experiment evaluates train-camera and tight-camera success rates. T
   \caption{Preliminary MimicGen 100-demo results. Each cell is train-camera / tight-camera success rate. Missing entries are left blank until the corresponding runs finish.}
   \label{tab:mimicgen-prelim}
   \resizebox{\linewidth}{!}{%
-  \begin{tabular}{l c c c c c}
+  \begin{tabular}{l c c c c c c}
     \toprule
-    Method & Stack Three & Coffee & Threading & Stack & Hammer Cleanup \\
+    Method & Modality & Stack Three & Coffee & Threading & Stack & Hammer Cleanup \\
     \midrule
-    Diffusion Policy & 0.15 / 0.00 & 0.00 / 0.00 & 0.00 / 0.00 & 0.95 / 0.025 & -- \\
-    ManiFlow & 0.275 / 0.275 & 0.10 / 0.225 & 0.025 / 0.05 & 0.975 / 0.725 & -- \\
-    RayZer/action-only & 0.30 / 0.00 & 0.025 / 0.00 & 0.05 / 0.00 & 0.975 / 0.025 & -- \\
-    RayZer + register NVS & 0.55 / 0.25 & 0.20 / 0.175 & 0.15 / 0.10 & -- & -- \\
+    Diffusion Policy & Image & 0.15 / 0.00 & 0.00 / 0.00 & 0.00 / 0.00 & 0.95 / 0.025 & -- \\
+    ManiFlow & Point cloud & 0.275 / 0.275 & 0.10 / 0.225 & 0.025 / 0.05 & 0.975 / 0.725 & -- \\
+    RayZer/action-only & Image & 0.30 / 0.00 & 0.025 / 0.00 & 0.05 / 0.00 & 0.975 / 0.025 & -- \\
+    RayZer + register NVS & Image & 0.55 / 0.25 & 0.20 / 0.175 & 0.15 / 0.10 & -- & -- \\
     \bottomrule
   \end{tabular}
   }
