@@ -1,31 +1,148 @@
-\subsection{Problem setup}
+Our goal is to train an RGB policy that can use camera geometry without requiring calibrated camera poses at test time.  The central design is to make camera pose an internal latent variable: a pose predictor estimates the camera-to-world transform of each input view, the estimated transforms are converted into per-pixel ray features, and the downstream policy is trained end-to-end through these geometric features.  We instantiate this idea in two variants.  The first variant trains an action policy directly from predicted camera geometry.  The second variant adds a register-token novel-view synthesis objective that encourages the observation representation to preserve 3D scene structure.
 
-The policy receives RGB observations from one or more cameras, proprioception, and optionally camera-pose labels for a subset of training examples. It predicts an action chunk for imitation learning. The central design choice is whether camera geometry is supplied as fixed calibration, predicted by a separate model, or optimized jointly with the action policy.
+\subsection{Problem Setup}
 
-\subsection{Semi-supervised camera-pose prediction}
+At time \(t\), the policy observes \(N\) RGB views
+\(\mathcal{I}_t=\{I_{t,i}\}_{i=1}^{N}\), proprioception \(q_t\), and a task
+condition \(c\) such as a language embedding.  It predicts an action chunk
+\(A_t=\{a_t,\ldots,a_{t+H-1}\}\in\mathbb{R}^{H\times d_a}\).  In our
+implementation \(H=32\) and each action contains end-effector translation,
+6D rotation, and gripper command.  Camera \(i\) has intrinsics \(K_i\) and an
+extrinsic transform \(T_{t,i}\in SE(3)\).  We do not assume that \(T_{t,i}\)
+is available for every training sample.  Instead, a binary mask
+\(m_{t,i}\in\{0,1\}\) indicates whether a ground-truth pose label is observed;
+the label ratio is controlled by \(\rho\).
 
-The camera-pose predictor maps observations to camera poses or equivalent pose/ray parameters. Only a subset of training examples require ground-truth camera-pose labels. The supervised pose loss anchors the prediction, while the downstream action objective continues to shape the representation used by the policy. This setup treats pose prediction as part of the control system rather than as a fixed preprocessing step.
+The policy should therefore solve two coupled problems.  It must infer enough
+camera geometry to express pixels in a shared spatial frame, and it must use
+that representation to predict actions.  This coupling is important: when
+\(\rho\) is small, camera-pose supervision alone is insufficient, so the action
+and reconstruction objectives must also shape the pose predictor and the
+observation encoder.
 
-\subsection{E2E camera-pose action policy}
+\subsection{Semi-Supervised Camera-Pose Prediction}
 
-The action-only variant predicts camera geometry, converts it into pose or ray tokens, and conditions an observation encoder on those tokens. The action expert then predicts action chunks from the encoded observation representation. Its training objective is
+Given the RGB views, a pose head \(h_\phi\) predicts a transform
+\(\hat{T}_{t,i}=h_\phi(\mathcal{I}_t)_i\) for every input camera.  In the
+MimicGen experiments we predict camera-to-world poses and canonicalize them
+into the policy frame before ray construction.  The supervised pose loss is
+applied only on labeled views:
 \begin{equation}
-  \mathcal{L}_{\mathrm{action}} + \lambda_{\mathrm{pose}}\mathcal{L}_{\mathrm{pose}}.
+\mathcal{L}_{\text{pose}} =
+\frac{1}{\max(1,\sum_{t,i}m_{t,i})}
+\sum_{t,i}m_{t,i}
+\left[
+w_R d_{SO(3)}(\hat{R}_{t,i},R_{t,i})
++ w_x \|\hat{x}_{t,i}-x_{t,i}\|_1
+\right],
+\end{equation}
+where \(d_{SO(3)}\) is the geodesic rotation distance and \(x\) denotes
+translation.  The loss is semi-supervised because it can be evaluated on any
+chosen fraction of labeled camera poses while the rest of the model still
+receives action and, when enabled, NVS gradients.
+
+The estimated pose is then turned into dense camera geometry.  For each pixel
+coordinate \(u\), intrinsics \(K_i\) and pose \(\hat{T}_{t,i}\) define a ray
+origin \(o_{t,i}(u)\) and direction \(d_{t,i}(u)\).  We encode these rays as a
+six-channel Plucker-style map
+\begin{equation}
+P_{t,i}(u)=\left[o_{t,i}(u)\times d_{t,i}(u),\ d_{t,i}(u)\right].
+\end{equation}
+The visual encoder receives RGB together with \(P_{t,i}\).  Because ray
+construction is differentiable with respect to \(\hat{T}_{t,i}\), downstream
+losses can update the pose head even when a particular image has no camera-pose
+label.
+
+\subsection{E2E Camera-Pose Action Policy}
+
+The action-only variant tests whether action supervision and sparse pose labels
+are enough to learn useful camera geometry.  For each view, we concatenate RGB
+and predicted ray features and tokenize the result with an observation encoder:
+\begin{equation}
+z_t = f_\theta\left(\{I_{t,i}, P_{t,i}\}_{i=1}^{N}, q_t, c\right).
+\end{equation}
+An action expert \(g_\psi\) predicts a chunk of future robot actions using a
+conditional flow-matching decoder.  Let \(x_1=A_t\) be the demonstration action
+chunk, \(x_0\sim\mathcal{N}(0,I)\), and \(\tau\sim U[0,1]\).  We train the
+decoder to predict the velocity field along the interpolation
+\begin{equation}
+x_\tau = (1-(1-\sigma_{\min})\tau)x_0+\tau x_1,\qquad
+u_\tau = x_1-(1-\sigma_{\min})x_0.
+\end{equation}
+The action loss is
+\begin{equation}
+\mathcal{L}_{\text{act}} =
+\mathbb{E}_{x_0,\tau}
+\left[
+\|g_\psi(x_\tau,\tau,z_t)-u_\tau\|_2^2
+\right].
+\end{equation}
+The total objective for this variant is
+\begin{equation}
+\mathcal{L}_{\text{RayZer}} =
+\mathcal{L}_{\text{act}}+\lambda_{\text{pose}}\mathcal{L}_{\text{pose}}.
+\end{equation}
+At inference, no ground-truth camera pose is provided.  The model predicts
+camera poses from RGB, builds ray features from the predictions, and samples an
+action chunk from the action decoder.
+
+\subsection{E2E Camera-Pose NVS Policy}
+
+The second variant adds an explicit 3D representation pressure through
+register-token novel-view synthesis.  This model uses a separate observation
+encoder from the action-only variant.  The encoder maps source views and their
+predicted ray features into a fixed set of scene registers:
+\begin{equation}
+R_t = F_\theta\left(\{I_{t,i},P_{t,i}\}_{i=1}^{N}\right),
+\qquad R_t\in\mathbb{R}^{M\times D}.
+\end{equation}
+In the current implementation \(M=64\) active registers.  The action expert
+uses these registers together with proprioception and task conditioning:
+\begin{equation}
+z_t^{\text{reg}} = \text{concat}(R_t, q_t, c), \qquad
+\mathcal{L}_{\text{act}} =
+\mathcal{L}_{\text{flow}}(g_\psi, z_t^{\text{reg}}, A_t).
 \end{equation}
 
-\subsection{E2E camera-pose NVS policy}
-
-The NVS variant uses a register-style observation encoder. Its latent registers are consumed by both an action expert and a novel-view synthesis decoder. During training, the NVS decoder receives a target camera pose or ray query and reconstructs a held-out target view. The resulting training objective is
+For the NVS objective, we randomly select a target camera \(j\) and provide the
+decoder with the target pose and intrinsics through target-view Plucker rays.
+To prevent trivial copying, the target view's encoder input is masked with
+probability \(p_{\text{drop}}\), so the decoder must reconstruct the target
+image from the remaining scene evidence stored in the registers.  The NVS
+decoder \(D_\omega\) uses target rays as queries and cross-attends to the scene
+registers:
 \begin{equation}
-  \mathcal{L}_{\mathrm{action}} +
-  \lambda_{\mathrm{pose}}\mathcal{L}_{\mathrm{pose}} +
-  \lambda_{\mathrm{nvs}}\mathcal{L}_{\mathrm{nvs}}.
+\hat{I}_{t,j} =
+D_\omega\left(R_t, P_{t,j}\right).
 \end{equation}
-The rendering head is used only during training. At inference, the model uses predicted camera geometry and the action expert.
+We train it with a pixel and perceptual reconstruction loss:
+\begin{equation}
+\mathcal{L}_{\text{nvs}} =
+\|\hat{I}_{t,j}-I_{t,j}\|_2^2
++\beta\,\text{LPIPS}(\hat{I}_{t,j}, I_{t,j}).
+\end{equation}
+This objective forces the registers to encode object layout, occlusion, and
+camera geometry rather than only action-correlated image features.  The complete
+training objective is
+\begin{equation}
+\mathcal{L}_{\text{NVS}} =
+\mathcal{L}_{\text{act}}
++\lambda_{\text{pose}}\mathcal{L}_{\text{pose}}
++\lambda_{\text{nvs}}\mathcal{L}_{\text{nvs}}.
+\end{equation}
+
+The NVS decoder is used only during training.  At inference, the policy keeps
+the pose head, register observation encoder, and action expert, but it discards
+the reconstruction head.  This preserves the end-to-end action policy interface:
+the robot receives only RGB, proprioception, and task conditioning, while camera
+geometry is inferred internally.
 
 \begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{figures/teaser.png}
-  \caption{Draft teaser figure for the MimicGen setting, showing policy learning, pose prediction, novel-view synthesis, and action loss in the rendered evaluation scene.}
-  \label{fig:teaser}
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/teaser.png}
+    \caption{Overview of the proposed training signals.  The main policy learns
+    from action supervision while a semi-supervised camera-pose loss and an
+    optional novel-view synthesis loss encourage the observation representation
+    to encode camera geometry and 3D scene structure.}
+    \label{fig:teaser}
 \end{figure}
