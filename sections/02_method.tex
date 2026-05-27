@@ -9,9 +9,11 @@ condition \(c\) such as a language embedding.  It predicts an action chunk
 implementation \(H=32\) and each action contains end-effector translation,
 6D rotation, and gripper command.  Camera \(i\) has intrinsics \(K_i\) and an
 extrinsic transform \(T_{t,i}\in SE(3)\).  We do not assume that \(T_{t,i}\)
-is available for every training sample.  Instead, a binary mask
-\(m_{t,i}\in\{0,1\}\) indicates whether a ground-truth pose label is observed;
-the label ratio is controlled by \(\rho\).
+is available for every training episode.  Pose annotation is assigned at the
+episode level: for episode \(e\), a binary mask \(m_e\in\{0,1\}\) indicates
+whether all camera poses in that episode are labeled.  The label ratio
+\(\rho\) is therefore the fraction of training episodes with camera-pose
+annotations.
 
 The policy should therefore solve two coupled problems.  It must infer enough
 camera geometry to express pixels in a shared spatial frame, and it must use
@@ -26,19 +28,19 @@ Given the RGB views, a pose head \(h_\phi\) predicts a transform
 \(\hat{T}_{t,i}=h_\phi(\mathcal{I}_t)_i\) for every input camera.  In the
 MimicGen experiments we predict camera-to-world poses and canonicalize them
 into the policy frame before ray construction.  The supervised pose loss is
-applied only on labeled views:
+applied only to timesteps and views from labeled episodes:
 \begin{equation}
 \mathcal{L}_{\text{pose}} =
-\frac{1}{\max(1,\sum_{t,i}m_{t,i})}
-\sum_{t,i}m_{t,i}
+\frac{1}{\max(1,\sum_{e,t,i}m_e)}
+\sum_{e,t,i}m_e
 \left[
-w_R d_{SO(3)}(\hat{R}_{t,i},R_{t,i})
-+ w_x \|\hat{x}_{t,i}-x_{t,i}\|_1
+w_R d_{SO(3)}(\hat{R}_{e,t,i},R_{e,t,i})
++ w_x \|\hat{x}_{e,t,i}-x_{e,t,i}\|_1
 \right],
 \end{equation}
 where \(d_{SO(3)}\) is the geodesic rotation distance and \(x\) denotes
 translation.  The loss is semi-supervised because it can be evaluated on any
-chosen fraction of labeled camera poses while the rest of the model still
+chosen fraction of labeled episodes while the rest of the model still
 receives action and, when enabled, NVS gradients.
 
 The estimated pose is then turned into dense camera geometry.  For each pixel
@@ -50,14 +52,15 @@ P_{t,i}(u)=\left[o_{t,i}(u)\times d_{t,i}(u),\ d_{t,i}(u)\right].
 \end{equation}
 The visual encoder receives RGB together with \(P_{t,i}\).  Because ray
 construction is differentiable with respect to \(\hat{T}_{t,i}\), downstream
-losses can update the pose head even when a particular image has no camera-pose
-label.
+losses can update the pose head even when an image comes from an episode with
+no camera-pose annotation.
 
 \subsection{E2E Camera-Pose Action Policy}
 
-The action-only variant tests whether action supervision and sparse pose labels
-are enough to learn useful camera geometry.  For each view, we concatenate RGB
-and predicted ray features and tokenize the result with an observation encoder:
+The action-only variant tests whether action supervision and sparse,
+episode-level pose labels are enough to learn useful camera geometry.  For each
+view, we concatenate RGB and predicted ray features and tokenize the result with
+an observation encoder:
 \begin{equation}
 z_t = f_\theta\left(\{I_{t,i}, P_{t,i}\}_{i=1}^{N}, q_t, c\right).
 \end{equation}
@@ -96,8 +99,13 @@ predicted ray features into a fixed set of scene registers:
 R_t = F_\theta\left(\{I_{t,i},P_{t,i}\}_{i=1}^{N}\right),
 \qquad R_t\in\mathbb{R}^{M\times D}.
 \end{equation}
-In the current implementation \(M=64\) active registers.  The action expert
-uses these registers together with proprioception and task conditioning:
+Concretely, the encoder appends learned active register tokens to the
+multi-view patch sequence.  After transformer self-attention, the view patch
+tokens are discarded and only the active registers are retained.  The NVS
+branch therefore decodes from a register bottleneck rather than directly from
+the full source patch sequence.  In the current implementation \(M=64\) active
+registers.  The action expert uses these registers together with proprioception
+and task conditioning:
 \begin{equation}
 z_t^{\text{reg}} = \text{concat}(R_t, q_t, c), \qquad
 \mathcal{L}_{\text{act}} =
@@ -109,8 +117,8 @@ decoder with the target pose and intrinsics through target-view Plucker rays.
 To prevent trivial copying, the target view's encoder input is masked with
 probability \(p_{\text{drop}}\), so the decoder must reconstruct the target
 image from the remaining scene evidence stored in the registers.  The NVS
-decoder \(D_\omega\) uses target rays as queries and cross-attends to the scene
-registers:
+decoder \(D_\omega\) patchifies the target-view ray map, uses those target-ray
+tokens as queries, and cross-attends only to the retained scene registers:
 \begin{equation}
 \hat{I}_{t,j} =
 D_\omega\left(R_t, P_{t,j}\right).
