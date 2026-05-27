@@ -25,10 +25,9 @@ observation encoder.
 \subsection{Semi-Supervised Camera-Pose Prediction}
 
 Given the RGB views, a pose head \(h_\phi\) predicts a transform
-\(\hat{T}_{t,i}=h_\phi(\mathcal{I}_t)_i\) for every input camera.  In the
-MimicGen experiments we predict camera-to-world poses and canonicalize them
-into the policy frame before ray construction.  The supervised pose loss is
-applied only to timesteps and views from labeled episodes:
+\(\hat{T}_{t,i}=h_\phi(\mathcal{I}_t)_i\) for every input camera.  The
+supervised pose loss is applied only to timesteps and views from labeled
+episodes:
 \begin{equation}
 \mathcal{L}_{\text{pose}} =
 \frac{1}{\max(1,\sum_{e,t,i}m_e)}
