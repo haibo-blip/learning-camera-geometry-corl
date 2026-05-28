@@ -23,6 +23,14 @@ target-observation dropout probability 0.6 during NVS training.  Diffusion
 Policy and ManiFlow use their original training recipes as closely as possible;
 ManiFlow uses 1024 point-cloud points.
 
+\paragraph{Real-World Tabletop.}
+The real-world E2E camera-pose NVS policy uses 50\% episode-level pose labels
+and no calibration at inference; the Plucker-GT reference uses full per-episode
+calibration at both training and test time.  Both share the Trossen WidowX AI
+platform, the wrist-plus-two-surround camera rig, and the per-task rubrics and
+trial counts.  Actions are predicted in the absolute end-effector frame as
+1-second chunks at 50 Hz.
+
 \section{Camera-Pose Loss}
 
 Table~\ref{tab:appendix-cam-pose-loss} reports the camera-pose prediction

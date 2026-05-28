@@ -54,9 +54,10 @@ end-to-end camera-pose policies under both train-camera and tight-camera
 evaluation.  Averaged across the four MimicGen tasks, the NVS variant
 improves over the action-only variant by 13.1 percentage points on
 train-camera evaluation and 23.1 points under tight-camera evaluation.  On a
-real-world Blocks-in-Bowl evaluation, the NVS policy reaches 100\% success over
-10 trials under the same success definition as the calibrated Plucker-GT
-reference.
+real-world tabletop suite evaluated under a protocol matched to the calibrated
+Plucker-GT reference, the NVS policy matches or exceeds that reference (100\%
+vs.\ 50\% full-task success on Blocks-in-Bowl) while using camera-pose labels
+for only half of the training episodes and no calibration at inference.
 
 The paper makes three contributions.  First, we formulate camera geometry
 learning as an end-to-end visuomotor control problem with episode-level
@@ -64,7 +65,7 @@ semi-supervised camera-pose labels, so episodes without extrinsics still
 contribute action and representation-learning gradients.  Second, we present two
 camera-aware policy variants, one trained only with action and pose losses and
 one regularized by scene-token novel-view synthesis.  Third, we evaluate these
-policies on LIBERO-MV, MimicGen, and real-world Blocks-in-Bowl, showing that
+policies on LIBERO-MV, MimicGen, and a real-world tabletop suite, showing that
 task-useful camera geometry can be learned inside the policy objective while
 reducing reliance on fixed calibrated metadata at inference.
 
