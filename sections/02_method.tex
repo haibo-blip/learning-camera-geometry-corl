@@ -161,7 +161,9 @@ geometry is inferred internally.
     construct Plucker ray maps before action prediction. The action-only policy
     feeds ray-conditioned observations to an action expert, while the NVS policy
     uses a separate scene-token encoder whose tokens feed both the action expert
-    and a training-time NVS decoder. Pose supervision is applied only on labeled
-    episodes, and the NVS decoder is discarded at inference.}
+    and a training-time NVS decoder. The source/target view split and target
+    dropout are used only for the NVS training objective. Pose supervision is
+    applied only on labeled episodes, and the NVS decoder is discarded at
+    inference.}
     \label{fig:pipeline}
 \end{figure}
