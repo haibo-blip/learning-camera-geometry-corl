@@ -22,3 +22,51 @@ labels in the reported runs.  The NVS variant uses 64 active scene tokens and
 target-observation dropout probability 0.6 during NVS training.  Diffusion
 Policy and ManiFlow use their original training recipes as closely as possible;
 ManiFlow uses 1024 point-cloud points.
+
+\section{Camera-Pose Loss}
+
+Table~\ref{tab:appendix-cam-pose-loss} reports the camera-pose prediction
+metrics for the MimicGen E2E camera-pose NVS runs.  Each value is averaged over
+the last 10 logged W\&B points available for that metric.  The supervised pose
+loss is computed on pose-labeled episodes, while the visual pose-error metrics
+are logged from held-out visualization rollouts.
+
+\begin{table}[ht]
+  \centering
+  \caption{Camera-pose prediction losses and errors for the MimicGen NVS policy.}
+  \label{tab:appendix-cam-pose-loss}
+  \resizebox{\linewidth}{!}{
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    Task & Train step & Pose loss & Rot. err. (deg) & Trans. L1 & Vis. rot. err. (deg) & Vis. trans. err. (m) \\
+    \midrule
+    Stack Three & 145900 & 0.0309 & 1.741 & 0.00094 & 0.197 & 0.00472 \\
+    Stack & 400000 & 0.0327 & 1.873 & 0.00007 & 0.108 & 0.00375 \\
+    Threading & 483700 & 0.0314 & 1.756 & 0.00151 & 0.216 & 0.00673 \\
+    Coffee & 800000 & 0.0330 & 1.884 & 0.00022 & 0.104 & 0.00313 \\
+    \bottomrule
+  \end{tabular}}
+\end{table}
+
+\clearpage
+\section{Novel-View Synthesis Quality}
+
+Fig.~\ref{fig:appendix-nvs-quality} shows one validation NVS reconstruction
+example per MimicGen task.  Each strip contains the remaining source view, the
+ground-truth target view, and the predicted target view, after removing the
+duplicated target input from the raw W\&B visualization.
+
+\begin{figure}[ht]
+  \centering
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{cc}
+    \textbf{Stack Three} & \textbf{Stack} \\
+    \includegraphics[width=0.47\linewidth]{figures/appendix/nvs_quality/stack_three_nvs.png} &
+    \includegraphics[width=0.47\linewidth]{figures/appendix/nvs_quality/stack_nvs.png} \\
+    \textbf{Threading} & \textbf{Coffee} \\
+    \includegraphics[width=0.47\linewidth]{figures/appendix/nvs_quality/threading_nvs.png} &
+    \includegraphics[width=0.47\linewidth]{figures/appendix/nvs_quality/coffee_nvs.png} \\
+  \end{tabular}
+  \caption{NVS reconstruction examples from the E2E camera-pose NVS policy. In each strip, columns are source view, ground-truth target view, and predicted target view.}
+  \label{fig:appendix-nvs-quality}
+\end{figure}
