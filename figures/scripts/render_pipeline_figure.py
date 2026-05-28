@@ -178,17 +178,12 @@ def pair_card(box, title, rgb_img, ray_img, stroke, dropped=False, title_size=24
 def scene_token_glyph(box, label, stroke=C_TEAL, fill="#def7e3", label_size=22):
     x0, y0, x1, y1 = map(int, box)
     rounded((x0, y0, x1, y1), r=16, fill="white", outline=stroke, width=4)
-    token_w, token_h = 30, 62
-    gap = 13
-    total_w = token_w * 4 + gap * 3
-    start_x = x0 + (x1 - x0 - total_w) // 2
+    token_w, token_h = 38, 62
+    start_x = x0 + (x1 - x0 - token_w) // 2
     top = y0 + 18
-    for idx in range(4):
-        tx = start_x + idx * (token_w + gap)
-        d.rounded_rectangle((tx, top, tx + token_w, top + token_h), radius=7, fill=fill, outline="#65c878", width=3)
-        d.line((tx + 7, top + 13, tx + token_w - 7, top + 13), fill="#9ee0aa", width=2)
-        d.line((tx + 7, top + 31, tx + token_w - 7, top + 31), fill="#9ee0aa", width=2)
-        d.line((tx + 7, top + 49, tx + token_w - 7, top + 49), fill="#9ee0aa", width=2)
+    d.rounded_rectangle((start_x, top, start_x + token_w, top + token_h), radius=7, fill=fill, outline="#65c878", width=3)
+    for yy in (13, 31, 49):
+        d.line((start_x + 8, top + yy, start_x + token_w - 8, top + yy), fill="#9ee0aa", width=2)
     text_fit_center(((x0 + x1) / 2, y1 - 23), label, label_size, (x1 - x0) - 18, fill=stroke, bold=True)
 
 
@@ -315,9 +310,9 @@ def main():
     arrow([(1376, 1407), (1376, 1462)], color=C_TEAL, width=7)
     arrow([(2320, 1407), (2320, 1462)], color=C_TEAL, width=7)
 
-    scene_token_glyph((2650, 1038, 2900, 1168), "scene token", label_size=21)
+    scene_token_glyph((2696, 1038, 2854, 1168), "scene token", label_size=21)
     node((2630, 1210, 2920, 1340), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=31)
-    scene_token_glyph((3000, 1162, 3238, 1352), "updated scene token", label_size=20)
+    scene_token_glyph((3010, 1178, 3208, 1340), "updated scene token", label_size=19)
     labeled_tile(ray_b, (3000, 1016, 3238, 1130), "target ray query", C_BLUE, label_color=C_BLUE, label_size=19, image_frac=0.58)
     node((3270, 1068, 3478, 1194), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=33)
     labeled_tile(view_b, (3508, 1028, 3668, 1234), "NVS objective", C_BLUE, label_size=21, image_frac=0.64)
@@ -325,11 +320,11 @@ def main():
     labeled_tile(action_crop, (3508, 1350, 3668, 1558), "action objective", C_ORANGE, label_size=19, image_frac=0.62)
     arrow([(2522, 1538), (2580, 1538), (2580, 1268), (2630, 1268)], color=C_TEAL, width=9)
     arrow([(2775, 1168), (2775, 1210)], color=C_TEAL, width=7)
-    arrow([(2920, 1268), (3000, 1268)], color=C_TEAL, width=8)
-    arrow([(3238, 1220), (3245, 1220), (3245, 1131), (3270, 1131)], color=C_BLUE, width=8)
+    arrow([(2920, 1268), (3010, 1268)], color=C_TEAL, width=8)
+    arrow([(3208, 1220), (3245, 1220), (3245, 1131), (3270, 1131)], color=C_BLUE, width=8)
     arrow([(3238, 1074), (3270, 1103)], color=C_BLUE, width=7)
     arrow([(3478, 1131), (3508, 1131)], color=C_BLUE, width=8)
-    arrow([(3238, 1308), (3245, 1308), (3245, 1453), (3270, 1453)], color=C_ORANGE, width=8)
+    arrow([(3208, 1308), (3245, 1308), (3245, 1453), (3270, 1453)], color=C_ORANGE, width=8)
     arrow([(3478, 1453), (3508, 1453)], color=C_ORANGE, width=8)
 
     img.save(OUT, quality=98)
