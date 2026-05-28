@@ -28,7 +28,7 @@ F_PANEL = font(42, bold=True)
 F_BAND = font(35, bold=True)
 F_LABEL = font(33, bold=True)
 F_SMALL = font(29)
-F_TINY = font(25)
+F_TINY = font(28)
 F_CHIP = font(25, bold=True)
 
 C_TEXT = "#171b25"
@@ -100,6 +100,25 @@ def text_fit_center(xy, text, size, max_width, fill=C_TEXT, bold=False, min_size
     text_center(xy, text, fnt, fill=fill)
 
 
+def text_multiline_fit_center(xy, text, size, max_width, fill=C_TEXT, bold=False, min_size=17, line_gap=3):
+    lines = [line for line in text.split("\n") if line]
+    chosen = size
+    fnt = font(chosen, bold=bold)
+    while chosen > min_size:
+        widths = [d.textbbox((0, 0), line, font=fnt)[2] for line in lines]
+        if widths and max(widths) <= max_width:
+            break
+        chosen -= 1
+        fnt = font(chosen, bold=bold)
+    heights = [d.textbbox((0, 0), line, font=fnt)[3] - d.textbbox((0, 0), line, font=fnt)[1] for line in lines]
+    line_h = max(heights) if heights else chosen
+    total_h = line_h * len(lines) + line_gap * max(0, len(lines) - 1)
+    x, y = xy
+    start_y = y - total_h / 2 + line_h / 2
+    for i, line in enumerate(lines):
+        text_center((x, start_y + i * (line_h + line_gap)), line, fnt, fill=fill)
+
+
 def arrow(points, color="#1c9b8e", width=9, head=26):
     pts = [(int(x), int(y)) for x, y in points]
     for a, b in zip(pts[:-1], pts[1:]):
@@ -152,7 +171,7 @@ def dropout_overlay(box, label="p_drop"):
     img.paste(comp.convert("RGB"), (x0, y0))
 
 
-def labeled_tile(src, box, label, stroke, label_color=None, label_size=23, image_frac=0.72, overlay_drop=False):
+def labeled_tile(src, box, label, stroke, label_color=None, label_size=26, image_frac=0.72, overlay_drop=False):
     x0, y0, x1, y1 = map(int, box)
     rounded((x0, y0, x1, y1), r=14, fill="white", outline=stroke, width=4)
     pad = 11
@@ -160,7 +179,10 @@ def labeled_tile(src, box, label, stroke, label_color=None, label_size=23, image
     paste_cover(src, (x0 + pad, y0 + pad, x1 - pad, im_bottom), radius=9)
     if overlay_drop:
         dropout_overlay((x0 + pad, y0 + pad, x1 - pad, im_bottom), "p_drop")
-    text_fit_center(((x0 + x1) / 2, y1 - 22), label, label_size, (x1 - x0) - 18, fill=label_color or stroke, bold=True)
+    if "\n" in label:
+        text_multiline_fit_center(((x0 + x1) / 2, y1 - 34), label, label_size, (x1 - x0) - 18, fill=label_color or stroke, bold=True)
+    else:
+        text_fit_center(((x0 + x1) / 2, y1 - 22), label, label_size, (x1 - x0) - 18, fill=label_color or stroke, bold=True)
 
 
 def pair_card(box, title, rgb_img, ray_img, stroke, dropped=False, title_size=24):
@@ -171,8 +193,8 @@ def pair_card(box, title, rgb_img, ray_img, stroke, dropped=False, title_size=24
     inner_top = y0 + 58
     inner_bottom = y1 - 16
     tile_w = int((x1 - x0 - 46 - gap) / 2)
-    labeled_tile(rgb_img, (x0 + 16, inner_top, x0 + 16 + tile_w, inner_bottom), "RGB", stroke, label_size=20, overlay_drop=dropped)
-    labeled_tile(ray_img, (x0 + 16 + tile_w + gap, inner_top, x0 + 16 + tile_w * 2 + gap, inner_bottom), "ray", stroke, label_size=20, overlay_drop=dropped)
+    labeled_tile(rgb_img, (x0 + 16, inner_top, x0 + 16 + tile_w, inner_bottom), "RGB", stroke, label_size=22, overlay_drop=dropped)
+    labeled_tile(ray_img, (x0 + 16 + tile_w + gap, inner_top, x0 + 16 + tile_w * 2 + gap, inner_bottom), "ray", stroke, label_size=22, overlay_drop=dropped)
 
 
 def scene_token_glyph(box, label, stroke=C_TEAL, fill="#def7e3", label_size=22):
@@ -184,7 +206,10 @@ def scene_token_glyph(box, label, stroke=C_TEAL, fill="#def7e3", label_size=22):
     d.rounded_rectangle((start_x, top, start_x + token_w, top + token_h), radius=7, fill=fill, outline="#65c878", width=3)
     for yy in (13, 31, 49):
         d.line((start_x + 8, top + yy, start_x + token_w - 8, top + yy), fill="#9ee0aa", width=2)
-    text_fit_center(((x0 + x1) / 2, y1 - 23), label, label_size, (x1 - x0) - 18, fill=stroke, bold=True)
+    if "\n" in label:
+        text_multiline_fit_center(((x0 + x1) / 2, y1 - 36), label, label_size, (x1 - x0) - 18, fill=stroke, bold=True, line_gap=1)
+    else:
+        text_fit_center(((x0 + x1) / 2, y1 - 23), label, label_size, (x1 - x0) - 18, fill=stroke, bold=True)
 
 
 def plucker(size=(330, 185), phase=0.0):
@@ -257,22 +282,22 @@ def main():
         x0, y0, x1, y1 = map(int, box)
         rounded((x0, y0, x1, y1), r=18, fill="white", outline=C_LINE, width=4)
         text_fit_center(((x0 + x1) / 2, y0 + 36), title, 28, x1 - x0 - 28, fill=C_TEXT, bold=True)
-        labeled_tile(view_a, (x0 + 26, y0 + 72, x0 + 170, y1 - 22), "View A", C_TEAL, label_size=20, image_frac=0.68)
-        labeled_tile(view_b, (x0 + 196, y0 + 72, x0 + 340, y1 - 22), "View B", C_RED, label_size=20, image_frac=0.68)
+        labeled_tile(view_a, (x0 + 26, y0 + 72, x0 + 170, y1 - 22), "View A", C_TEAL, label_size=23, image_frac=0.66)
+        labeled_tile(view_b, (x0 + 196, y0 + 72, x0 + 340, y1 - 22), "View B", C_RED, label_size=23, image_frac=0.66)
 
     def ray_maps_card(box):
         x0, y0, x1, y1 = map(int, box)
         rounded((x0, y0, x1, y1), r=18, fill="white", outline=C_BLUE, width=4)
         text_fit_center(((x0 + x1) / 2, y0 + 36), "Predicted Plucker rays", 26, x1 - x0 - 28, fill=C_BLUE, bold=True)
-        labeled_tile(ray_a, (x0 + 24, y0 + 76, x0 + 224, y1 - 22), "ray A", C_TEAL, label_size=20, image_frac=0.68)
-        labeled_tile(ray_b, (x0 + 254, y0 + 76, x0 + 454, y1 - 22), "ray B", C_RED, label_size=20, image_frac=0.68)
+        labeled_tile(ray_a, (x0 + 24, y0 + 76, x0 + 224, y1 - 22), "ray A", C_TEAL, label_size=23, image_frac=0.66)
+        labeled_tile(ray_b, (x0 + 254, y0 + 76, x0 + 454, y1 - 22), "ray B", C_RED, label_size=23, image_frac=0.66)
 
     def pose_block(box, aux_y=None):
         node(box, "Pose", "predictor", stroke=C_PURPLE, fill=C_PURPLE_FILL, title_color=C_TEXT, title_size=33)
         if aux_y is not None:
             x0, _, x1, _ = box
-            rounded((x0 - 18, aux_y, x1 + 18, aux_y + 54), r=12, fill="white", outline=C_PURPLE, width=3)
-            text_fit_center(((x0 + x1) / 2, aux_y + 28), "semi-supervised pose loss", 22, (x1 - x0) + 10, fill=C_PURPLE, bold=True)
+            rounded((x0 - 18, aux_y, x1 + 18, aux_y + 68), r=12, fill="white", outline=C_PURPLE, width=3)
+            text_multiline_fit_center(((x0 + x1) / 2, aux_y + 35), "semi-supervised\npose loss", 25, (x1 - x0) + 10, fill=C_PURPLE, bold=True)
 
     band_a = (1148, 305, 3690, 875)
     rounded(band_a, r=22, fill=C_GREEN_FILL, outline=C_GREEN_STROKE, width=3)
@@ -282,7 +307,7 @@ def main():
     ray_maps_card((2038, 440, 2522, 735))
     node((2630, 520, 2918, 650), "Observation", "encoder", stroke="#35ad67", fill="white", title_size=33)
     node((3028, 520, 3290, 650), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=33)
-    labeled_tile(action_crop, (3370, 438, 3630, 735), "action objective", C_ORANGE, label_size=25, image_frac=0.74)
+    labeled_tile(action_crop, (3370, 438, 3630, 735), "action\nobjective", C_ORANGE, label_size=28, image_frac=0.66)
     arrow([(1558, 588), (1658, 588)], color=C_PURPLE, width=9)
     arrow([(1938, 588), (2038, 588)], color=C_BLUE, width=9)
     arrow([(2522, 588), (2630, 588)], color=C_TEAL, width=9)
@@ -300,32 +325,32 @@ def main():
 
     sampler = (1195, 1462, 2522, 1626)
     rounded(sampler, r=18, fill="white", outline=C_LINE, width=3)
-    text_fit_center((1365, 1494), "encoder observations", 25, 320, fill=C_TEXT, bold=True)
-    labeled_tile(view_a, (1500, 1486, 1622, 1606), "source RGB", C_TEAL, label_size=17, image_frac=0.62)
-    labeled_tile(ray_a, (1642, 1486, 1788, 1606), "source ray", C_TEAL, label_size=17, image_frac=0.62)
-    labeled_tile(view_b, (1840, 1486, 1962, 1606), "target RGB", C_RED, label_size=17, image_frac=0.62, overlay_drop=True)
-    labeled_tile(ray_b, (1982, 1486, 2128, 1606), "target ray", C_RED, label_size=17, image_frac=0.62, overlay_drop=True)
-    text_fit_center((2318, 1532), "target obs dropped", 22, 330, fill=C_RED, bold=True)
-    text_fit_center((2318, 1563), "during training", 22, 330, fill=C_RED, bold=True)
+    text_fit_center((1365, 1494), "encoder observations", 27, 320, fill=C_TEXT, bold=True)
+    labeled_tile(view_a, (1500, 1486, 1622, 1606), "source", C_TEAL, label_size=23, image_frac=0.58)
+    labeled_tile(ray_a, (1642, 1486, 1788, 1606), "ray", C_TEAL, label_size=23, image_frac=0.58)
+    labeled_tile(view_b, (1840, 1486, 1962, 1606), "target", C_RED, label_size=23, image_frac=0.58, overlay_drop=True)
+    labeled_tile(ray_b, (1982, 1486, 2128, 1606), "ray", C_RED, label_size=23, image_frac=0.58, overlay_drop=True)
+    text_fit_center((2318, 1532), "target obs dropped", 25, 330, fill=C_RED, bold=True)
+    text_fit_center((2318, 1566), "during training", 25, 330, fill=C_RED, bold=True)
     arrow([(1376, 1407), (1376, 1462)], color=C_TEAL, width=7)
     arrow([(2320, 1407), (2320, 1462)], color=C_TEAL, width=7)
 
-    scene_token_glyph((2696, 1038, 2854, 1168), "scene token", label_size=21)
+    scene_token_glyph((2696, 1038, 2854, 1168), "scene token", label_size=24)
     node((2630, 1210, 2920, 1340), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=31)
-    scene_token_glyph((3010, 1178, 3208, 1340), "updated scene token", label_size=19)
-    labeled_tile(ray_b, (3000, 1016, 3238, 1130), "target ray query", C_BLUE, label_color=C_BLUE, label_size=19, image_frac=0.58)
+    scene_token_glyph((3018, 1178, 3188, 1340), "updated\nscene token", label_size=28)
+    labeled_tile(ray_b, (2992, 996, 3222, 1142), "target ray\nquery", C_BLUE, label_color=C_BLUE, label_size=25, image_frac=0.50)
     node((3270, 1068, 3478, 1194), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=33)
-    labeled_tile(view_b, (3508, 1028, 3668, 1234), "NVS objective", C_BLUE, label_size=21, image_frac=0.64)
+    labeled_tile(view_b, (3500, 1028, 3678, 1234), "NVS\nobjective", C_BLUE, label_size=24, image_frac=0.56)
     node((3270, 1390, 3478, 1516), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=33)
-    labeled_tile(action_crop, (3508, 1350, 3668, 1558), "action objective", C_ORANGE, label_size=19, image_frac=0.62)
+    labeled_tile(action_crop, (3500, 1350, 3678, 1558), "action\nobjective", C_ORANGE, label_size=24, image_frac=0.55)
     arrow([(2522, 1538), (2580, 1538), (2580, 1268), (2630, 1268)], color=C_TEAL, width=9)
     arrow([(2775, 1168), (2775, 1210)], color=C_TEAL, width=7)
-    arrow([(2920, 1268), (3010, 1268)], color=C_TEAL, width=8)
-    arrow([(3208, 1220), (3245, 1220), (3245, 1131), (3270, 1131)], color=C_BLUE, width=8)
-    arrow([(3238, 1074), (3270, 1103)], color=C_BLUE, width=7)
-    arrow([(3478, 1131), (3508, 1131)], color=C_BLUE, width=8)
-    arrow([(3208, 1308), (3245, 1308), (3245, 1453), (3270, 1453)], color=C_ORANGE, width=8)
-    arrow([(3478, 1453), (3508, 1453)], color=C_ORANGE, width=8)
+    arrow([(2920, 1268), (3018, 1268)], color=C_TEAL, width=8)
+    arrow([(3188, 1218), (3240, 1218), (3240, 1168), (3270, 1168)], color=C_BLUE, width=8)
+    arrow([(3222, 1104), (3270, 1104)], color=C_BLUE, width=7, head=20)
+    arrow([(3478, 1131), (3500, 1131)], color=C_BLUE, width=8)
+    arrow([(3188, 1308), (3240, 1308), (3240, 1453), (3270, 1453)], color=C_ORANGE, width=8)
+    arrow([(3478, 1453), (3500, 1453)], color=C_ORANGE, width=8)
 
     img.save(OUT, quality=98)
 
