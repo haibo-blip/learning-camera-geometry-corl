@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "pipeline.png"
 ASSETS = ROOT / "pipeline_assets"
 
-W, H = 3800, 1730
+W, H = 3200, 1780
 FONT = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
 BOLD = Path("/System/Library/Fonts/Supplemental/Arial Bold.ttf")
 BLACK = Path("/System/Library/Fonts/Supplemental/Arial Black.ttf")
@@ -22,14 +22,14 @@ def font(size: int, bold: bool = False, black: bool = False) -> ImageFont.FreeTy
     return ImageFont.truetype(str(BLACK if black else (BOLD if bold else FONT)), size)
 
 
-F_TITLE = font(78, black=True)
-F_SUB = font(39)
-F_PANEL = font(42, bold=True)
-F_BAND = font(35, bold=True)
-F_LABEL = font(33, bold=True)
-F_SMALL = font(29)
-F_TINY = font(28)
-F_CHIP = font(25, bold=True)
+F_TITLE = font(76, black=True)
+F_SUB = font(38)
+F_PANEL = font(46, bold=True)
+F_BAND = font(43, bold=True)
+F_LABEL = font(40, bold=True)
+F_SMALL = font(32)
+F_TINY = font(31)
+F_CHIP = font(29, bold=True)
 
 C_TEXT = "#171b25"
 C_MUTED = "#66758d"
@@ -162,10 +162,21 @@ def dropout_overlay(box, label="p_drop"):
     pd.rounded_rectangle((0, 0, w - 1, h - 1), radius=14, fill=(245, 248, 250, 158), outline=(90, 100, 115, 215), width=4)
     for k in range(-h, w + h, 28):
         pd.line((k, h, k + h, 0), fill=(85, 95, 110, 140), width=4)
-    tb = pd.textbbox((0, 0), label, font=F_TINY)
+    label_text = label
+    label_size = min(28, max(17, w // 4))
+    drop_font = font(label_size, bold=True)
+    tb = pd.textbbox((0, 0), label_text, font=drop_font)
+    while tb[2] - tb[0] + 30 > w - 10 and label_size > 16:
+        label_size -= 1
+        drop_font = font(label_size, bold=True)
+        tb = pd.textbbox((0, 0), label_text, font=drop_font)
+    if tb[2] - tb[0] + 30 > w - 10 and label_text == "p_drop":
+        label_text = "drop"
+        drop_font = font(max(16, label_size), bold=True)
+        tb = pd.textbbox((0, 0), label_text, font=drop_font)
     tw, th = tb[2] - tb[0], tb[3] - tb[1]
-    pd.rounded_rectangle((8, 8, tw + 30, th + 26), radius=8, fill=(255, 255, 255, 235), outline=(95, 105, 118, 185), width=2)
-    pd.text((18, 14), label, font=F_TINY, fill=(65, 72, 86, 255))
+    pd.rounded_rectangle((8, 8, min(w - 8, tw + 30), th + 26), radius=8, fill=(255, 255, 255, 235), outline=(95, 105, 118, 185), width=2)
+    pd.text((18, 14), label_text, font=drop_font, fill=(65, 72, 86, 255))
     base = img.crop((x0, y0, x1, y1)).convert("RGBA")
     comp = Image.alpha_composite(base, patch)
     img.paste(comp.convert("RGB"), (x0, y0))
@@ -180,7 +191,7 @@ def labeled_tile(src, box, label, stroke, label_color=None, label_size=26, image
     if overlay_drop:
         dropout_overlay((x0 + pad, y0 + pad, x1 - pad, im_bottom), "p_drop")
     if "\n" in label:
-        text_multiline_fit_center(((x0 + x1) / 2, y1 - 34), label, label_size, (x1 - x0) - 18, fill=label_color or stroke, bold=True)
+        text_multiline_fit_center(((x0 + x1) / 2, y1 - 48), label, label_size, (x1 - x0) - 18, fill=label_color or stroke, bold=True)
     else:
         text_fit_center(((x0 + x1) / 2, y1 - 22), label, label_size, (x1 - x0) - 18, fill=label_color or stroke, bold=True)
 
@@ -257,100 +268,104 @@ def main():
     ray_a = plucker((420, 235), 0.03)
     ray_b = plucker((420, 235), 0.42)
 
-    d.text((78, 48), "End-to-end camera-pose policy variants", font=F_TITLE, fill=C_TEXT)
-    d.text((80, 132), "Each model predicts camera pose inside the policy; action and NVS losses train the geometry module jointly with the encoder.", font=F_SUB, fill=C_MUTED)
+    d.text((58, 42), "End-to-end camera-pose policy variants", font=F_TITLE, fill=C_TEXT)
+    d.text((62, 124), "Each model predicts camera pose inside the policy; action and NVS losses train the geometry module jointly with the encoder.", font=F_SUB, fill=C_MUTED)
 
-    left = (60, 190, 1050, 1690)
-    right = (1100, 190, 3740, 1690)
+    left = (46, 190, 820, 1718)
+    right = (850, 190, 3154, 1718)
     shadowed_panel(left)
     shadowed_panel(right)
-    d.text((105, 235), "Scene + input views", font=F_PANEL, fill=C_TEXT)
-    d.text((1150, 235), "Model variants", font=F_PANEL, fill=C_TEXT)
+    d.text((88, 238), "Scene + input views", font=F_PANEL, fill=C_TEXT)
+    d.text((902, 238), "Model variants", font=F_PANEL, fill=C_TEXT)
 
-    rounded((105, 305, 1010, 1045), r=22, fill="#fbfdff", outline=C_LINE, width=3)
-    paste_cover(scene_crop, (135, 335, 980, 1015), radius=16)
+    rounded((88, 318, 778, 980), r=22, fill="#fbfdff", outline=C_LINE, width=3)
+    paste_cover(scene_crop, (112, 346, 754, 952), radius=16)
     for box, label, col, im in [
-        ((105, 1148, 535, 1648), "View A", C_TEAL, view_a),
-        ((585, 1148, 1010, 1648), "View B", C_RED, view_b),
+        ((88, 1084, 420, 1648), "View A", C_TEAL, view_a),
+        ((448, 1084, 778, 1648), "View B", C_RED, view_b),
     ]:
         rounded(box, r=20, fill="#fbfdff", outline=C_LINE, width=3)
         x0, y0, x1, y1 = box
-        paste_cover(im, (x0 + 26, y0 + 30, x1 - 26, y0 + 380), radius=14, border=col, bw=6)
-        text_fit_center(((x0 + x1) / 2, y1 - 46), label, 36, (x1 - x0) - 38, fill=col, bold=True)
+        paste_cover(im, (x0 + 22, y0 + 28, x1 - 22, y0 + 424), radius=14, border=col, bw=6)
+        text_fit_center(((x0 + x1) / 2, y1 - 54), label, 42, (x1 - x0) - 36, fill=col, bold=True)
 
     def rgb_views_card(box, title="RGB views"):
         x0, y0, x1, y1 = map(int, box)
         rounded((x0, y0, x1, y1), r=18, fill="white", outline=C_LINE, width=4)
-        text_fit_center(((x0 + x1) / 2, y0 + 36), title, 28, x1 - x0 - 28, fill=C_TEXT, bold=True)
-        labeled_tile(view_a, (x0 + 26, y0 + 72, x0 + 170, y1 - 22), "View A", C_TEAL, label_size=23, image_frac=0.66)
-        labeled_tile(view_b, (x0 + 196, y0 + 72, x0 + 340, y1 - 22), "View B", C_RED, label_size=23, image_frac=0.66)
+        text_fit_center(((x0 + x1) / 2, y0 + 42), title, 39, x1 - x0 - 28, fill=C_TEXT, bold=True)
+        tile_w = int((x1 - x0 - 78) / 2)
+        labeled_tile(view_a, (x0 + 24, y0 + 86, x0 + 24 + tile_w, y1 - 24), "View A", C_TEAL, label_size=31, image_frac=0.66)
+        labeled_tile(view_b, (x0 + 54 + tile_w, y0 + 86, x0 + 54 + tile_w * 2, y1 - 24), "View B", C_RED, label_size=31, image_frac=0.66)
 
     def ray_maps_card(box):
         x0, y0, x1, y1 = map(int, box)
         rounded((x0, y0, x1, y1), r=18, fill="white", outline=C_BLUE, width=4)
-        text_fit_center(((x0 + x1) / 2, y0 + 36), "Predicted Plucker rays", 26, x1 - x0 - 28, fill=C_BLUE, bold=True)
-        labeled_tile(ray_a, (x0 + 24, y0 + 76, x0 + 224, y1 - 22), "ray A", C_TEAL, label_size=23, image_frac=0.66)
-        labeled_tile(ray_b, (x0 + 254, y0 + 76, x0 + 454, y1 - 22), "ray B", C_RED, label_size=23, image_frac=0.66)
+        text_fit_center(((x0 + x1) / 2, y0 + 42), "Predicted rays", 39, x1 - x0 - 28, fill=C_BLUE, bold=True)
+        tile_w = int((x1 - x0 - 80) / 2)
+        labeled_tile(ray_a, (x0 + 24, y0 + 88, x0 + 24 + tile_w, y1 - 24), "ray A", C_TEAL, label_size=31, image_frac=0.66)
+        labeled_tile(ray_b, (x0 + 56 + tile_w, y0 + 88, x0 + 56 + tile_w * 2, y1 - 24), "ray B", C_RED, label_size=31, image_frac=0.66)
 
     def pose_block(box, aux_y=None):
-        node(box, "Pose", "predictor", stroke=C_PURPLE, fill=C_PURPLE_FILL, title_color=C_TEXT, title_size=33)
+        node(box, "Pose", "predictor", stroke=C_PURPLE, fill=C_PURPLE_FILL, title_color=C_TEXT, title_size=42)
         if aux_y is not None:
             x0, _, x1, _ = box
-            rounded((x0 - 18, aux_y, x1 + 18, aux_y + 68), r=12, fill="white", outline=C_PURPLE, width=3)
-            text_multiline_fit_center(((x0 + x1) / 2, aux_y + 35), "semi-supervised\npose loss", 25, (x1 - x0) + 10, fill=C_PURPLE, bold=True)
+            rounded((x0 - 18, aux_y, x1 + 18, aux_y + 84), r=12, fill="white", outline=C_PURPLE, width=3)
+            text_multiline_fit_center(((x0 + x1) / 2, aux_y + 43), "semi-supervised\npose loss", 31, (x1 - x0) + 10, fill=C_PURPLE, bold=True)
 
-    band_a = (1148, 305, 3690, 875)
+    band_a = (895, 320, 3110, 848)
     rounded(band_a, r=22, fill=C_GREEN_FILL, outline=C_GREEN_STROKE, width=3)
-    d.text((1195, 356), "A  E2E camera-pose action policy", font=F_BAND, fill=C_TEAL_DARK)
-    rgb_views_card((1195, 440, 1558, 735))
-    pose_block((1658, 520, 1938, 650), aux_y=696)
-    ray_maps_card((2038, 440, 2522, 735))
-    node((2630, 520, 2918, 650), "Observation", "encoder", stroke="#35ad67", fill="white", title_size=33)
-    node((3028, 520, 3290, 650), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=33)
-    labeled_tile(action_crop, (3370, 438, 3630, 735), "action\nobjective", C_ORANGE, label_size=28, image_frac=0.66)
-    arrow([(1558, 588), (1658, 588)], color=C_PURPLE, width=9)
-    arrow([(1938, 588), (2038, 588)], color=C_BLUE, width=9)
-    arrow([(2522, 588), (2630, 588)], color=C_TEAL, width=9)
-    arrow([(2918, 588), (3028, 588)], color=C_ORANGE, width=9)
-    arrow([(3290, 588), (3370, 588)], color=C_ORANGE, width=9)
+    d.text((940, 374), "A  E2E camera-pose action policy", font=F_BAND, fill=C_TEAL_DARK)
+    rgb_views_card((940, 452, 1276, 748))
+    pose_block((1350, 528, 1574, 678), aux_y=714)
+    ray_maps_card((1650, 452, 2020, 748))
+    node((2100, 528, 2374, 678), "Observation", "encoder", stroke="#35ad67", fill="white", title_size=39)
+    node((2454, 528, 2684, 678), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=41)
+    labeled_tile(action_crop, (2760, 444, 3026, 752), "action\nobjective", C_ORANGE, label_size=34, image_frac=0.66)
+    arrow([(1276, 600), (1350, 600)], color=C_PURPLE, width=9)
+    arrow([(1574, 600), (1650, 600)], color=C_BLUE, width=9)
+    arrow([(2020, 600), (2100, 600)], color=C_TEAL, width=9)
+    arrow([(2374, 600), (2454, 600)], color=C_ORANGE, width=9)
+    arrow([(2684, 600), (2760, 600)], color=C_ORANGE, width=9)
 
-    band_b = (1148, 960, 3690, 1668)
+    band_b = (895, 925, 3110, 1682)
     rounded(band_b, r=22, fill=C_CYAN_FILL, outline=C_CYAN_STROKE, width=3)
-    d.text((1195, 1012), "B  E2E camera-pose NVS policy", font=F_BAND, fill=C_TEAL_DARK)
-    rgb_views_card((1195, 1112, 1558, 1407))
-    pose_block((1658, 1198, 1938, 1328), aux_y=1362)
-    ray_maps_card((2038, 1112, 2522, 1407))
-    arrow([(1558, 1268), (1658, 1268)], color=C_PURPLE, width=9)
-    arrow([(1938, 1268), (2038, 1268)], color=C_BLUE, width=9)
+    d.text((940, 982), "B  E2E camera-pose NVS policy", font=F_BAND, fill=C_TEAL_DARK)
+    rgb_views_card((940, 1074, 1276, 1370))
+    pose_block((1350, 1148, 1574, 1298), aux_y=1338)
+    ray_maps_card((1650, 1074, 2020, 1370))
+    arrow([(1276, 1222), (1350, 1222)], color=C_PURPLE, width=9)
+    arrow([(1574, 1222), (1650, 1222)], color=C_BLUE, width=9)
 
-    sampler = (1195, 1462, 2522, 1626)
+    sampler = (940, 1460, 2020, 1638)
     rounded(sampler, r=18, fill="white", outline=C_LINE, width=3)
-    text_fit_center((1365, 1494), "encoder observations", 27, 320, fill=C_TEXT, bold=True)
-    labeled_tile(view_a, (1500, 1486, 1622, 1606), "source", C_TEAL, label_size=23, image_frac=0.58)
-    labeled_tile(ray_a, (1642, 1486, 1788, 1606), "ray", C_TEAL, label_size=23, image_frac=0.58)
-    labeled_tile(view_b, (1840, 1486, 1962, 1606), "target", C_RED, label_size=23, image_frac=0.58, overlay_drop=True)
-    labeled_tile(ray_b, (1982, 1486, 2128, 1606), "ray", C_RED, label_size=23, image_frac=0.58, overlay_drop=True)
-    text_fit_center((2318, 1532), "target obs dropped", 25, 330, fill=C_RED, bold=True)
-    text_fit_center((2318, 1566), "during training", 25, 330, fill=C_RED, bold=True)
-    arrow([(1376, 1407), (1376, 1462)], color=C_TEAL, width=7)
-    arrow([(2320, 1407), (2320, 1462)], color=C_TEAL, width=7)
+    text_fit_center((1118, 1496), "encoder observations", 34, 330, fill=C_TEXT, bold=True)
+    labeled_tile(view_a, (1284, 1488, 1398, 1616), "source", C_TEAL, label_size=28, image_frac=0.55)
+    labeled_tile(ray_a, (1418, 1488, 1546, 1616), "ray", C_TEAL, label_size=28, image_frac=0.55)
+    labeled_tile(view_b, (1598, 1488, 1712, 1616), "target", C_RED, label_size=28, image_frac=0.55, overlay_drop=True)
+    labeled_tile(ray_b, (1732, 1488, 1860, 1616), "ray", C_RED, label_size=28, image_frac=0.55, overlay_drop=True)
+    text_fit_center((1940, 1514), "target obs", 29, 145, fill=C_RED, bold=True)
+    text_fit_center((1940, 1548), "may drop", 29, 145, fill=C_RED, bold=True)
+    text_fit_center((1940, 1582), "in NVS", 29, 145, fill=C_RED, bold=True)
+    arrow([(1108, 1370), (1108, 1460)], color=C_TEAL, width=8)
+    arrow([(1835, 1370), (1835, 1460)], color=C_TEAL, width=8)
 
-    scene_token_glyph((2696, 1038, 2854, 1168), "scene token", label_size=24)
-    node((2630, 1210, 2920, 1340), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=31)
-    scene_token_glyph((3018, 1178, 3188, 1340), "updated\nscene token", label_size=28)
-    labeled_tile(ray_b, (2992, 996, 3222, 1142), "target ray\nquery", C_BLUE, label_color=C_BLUE, label_size=25, image_frac=0.50)
-    node((3270, 1068, 3478, 1194), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=33)
-    labeled_tile(view_b, (3500, 1028, 3678, 1234), "NVS\nobjective", C_BLUE, label_size=24, image_frac=0.56)
-    node((3270, 1390, 3478, 1516), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=33)
-    labeled_tile(action_crop, (3500, 1350, 3678, 1558), "action\nobjective", C_ORANGE, label_size=24, image_frac=0.55)
-    arrow([(2522, 1538), (2580, 1538), (2580, 1268), (2630, 1268)], color=C_TEAL, width=9)
-    arrow([(2775, 1168), (2775, 1210)], color=C_TEAL, width=7)
-    arrow([(2920, 1268), (3018, 1268)], color=C_TEAL, width=8)
-    arrow([(3188, 1218), (3240, 1218), (3240, 1168), (3270, 1168)], color=C_BLUE, width=8)
-    arrow([(3222, 1104), (3270, 1104)], color=C_BLUE, width=7, head=20)
-    arrow([(3478, 1131), (3500, 1131)], color=C_BLUE, width=8)
-    arrow([(3188, 1308), (3240, 1308), (3240, 1453), (3270, 1453)], color=C_ORANGE, width=8)
-    arrow([(3478, 1453), (3500, 1453)], color=C_ORANGE, width=8)
+    scene_token_glyph((2136, 1004, 2318, 1146), "scene token", label_size=30)
+    node((2090, 1192, 2384, 1348), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=38)
+    scene_token_glyph((2476, 1186, 2656, 1348), "updated\nscene token", label_size=32)
+    labeled_tile(ray_b, (2460, 984, 2668, 1148), "target ray\nquery", C_BLUE, label_color=C_BLUE, label_size=29, image_frac=0.48)
+    node((2734, 1032, 2918, 1180), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=41)
+    labeled_tile(view_b, (2954, 986, 3078, 1220), "NVS\nobjective", C_BLUE, label_size=30, image_frac=0.54)
+    node((2734, 1394, 2918, 1542), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=39)
+    labeled_tile(action_crop, (2954, 1348, 3078, 1588), "action\nobjective", C_ORANGE, label_size=29, image_frac=0.54)
+    arrow([(2020, 1222), (2090, 1222)], color=C_TEAL, width=9)
+    arrow([(2020, 1550), (2060, 1550), (2060, 1270), (2090, 1270)], color=C_TEAL, width=9)
+    arrow([(2227, 1146), (2227, 1192)], color=C_TEAL, width=8)
+    arrow([(2384, 1270), (2476, 1270)], color=C_TEAL, width=9)
+    arrow([(2656, 1238), (2700, 1238), (2700, 1136), (2734, 1136)], color=C_BLUE, width=8)
+    arrow([(2668, 1068), (2734, 1068)], color=C_BLUE, width=8, head=20)
+    arrow([(2918, 1106), (2954, 1106)], color=C_BLUE, width=8)
+    arrow([(2656, 1318), (2700, 1318), (2700, 1468), (2734, 1468)], color=C_ORANGE, width=8)
+    arrow([(2918, 1468), (2954, 1468)], color=C_ORANGE, width=8)
 
     img.save(OUT, quality=98)
 
