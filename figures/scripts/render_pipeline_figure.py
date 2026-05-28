@@ -288,12 +288,12 @@ def main():
 
     sampler = (1195, 1462, 2522, 1626)
     rounded(sampler, r=18, fill="white", outline=C_LINE, width=3)
-    text_fit_center((1355, 1494), "NVS split", 26, 230, fill=C_TEXT, bold=True)
+    text_fit_center((1365, 1494), "encoder observations", 25, 320, fill=C_TEXT, bold=True)
     labeled_tile(view_a, (1500, 1486, 1622, 1606), "source RGB", C_TEAL, label_size=17, image_frac=0.62)
     labeled_tile(ray_a, (1642, 1486, 1788, 1606), "source ray", C_TEAL, label_size=17, image_frac=0.62)
     labeled_tile(view_b, (1840, 1486, 1962, 1606), "target RGB", C_RED, label_size=17, image_frac=0.62, overlay_drop=True)
     labeled_tile(ray_b, (1982, 1486, 2128, 1606), "target ray", C_RED, label_size=17, image_frac=0.62, overlay_drop=True)
-    text_fit_center((2325, 1546), "drop only for NVS", 23, 310, fill=C_RED, bold=True)
+    text_fit_center((2325, 1546), "target obs may be dropped", 23, 350, fill=C_RED, bold=True)
     arrow([(1376, 1425), (1376, 1462)], color=C_TEAL, width=7)
     arrow([(2320, 1425), (2320, 1462)], color=C_TEAL, width=7)
 
@@ -310,7 +310,7 @@ def main():
     labeled_tile(view_b, (3508, 1028, 3668, 1234), "NVS objective", C_BLUE, label_size=21, image_frac=0.64)
     node((3270, 1390, 3478, 1516), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=33)
     labeled_tile(action_crop, (3508, 1350, 3668, 1558), "action objective", C_ORANGE, label_size=19, image_frac=0.62)
-    arrow([(2522, 1268), (2630, 1268)], color=C_TEAL, width=9)
+    arrow([(2522, 1538), (2580, 1538), (2580, 1268), (2630, 1268)], color=C_TEAL, width=9)
     arrow([(2920, 1268), (3008, 1268)], color=C_TEAL, width=8)
     arrow([(3238, 1250), (3245, 1250), (3245, 1131), (3270, 1131)], color=C_BLUE, width=8)
     arrow([(2920, 1103), (3270, 1103)], color=C_BLUE, width=7)
