@@ -190,13 +190,13 @@ def render_mimicgen_ablations() -> None:
     panels = [
         (
             "objective",
-            "E2E camera pose and NVS",
+            "Objective",
             ["No E2E pose or NVS", "E2E pose only", "E2E pose + NVS"],
             ["No E2E pose\nor NVS", "E2E pose\nonly", "E2E pose\n+ NVS"],
         ),
         (
             "scene_token",
-            "Scene-token bottleneck",
+            "Scene tokens",
             ["NVS without scene tokens", "NVS with scene tokens"],
             ["NVS w/o\nscene tokens", "NVS w/\nscene tokens"],
         ),
@@ -207,10 +207,10 @@ def render_mimicgen_ablations() -> None:
         ("tight_success", "Tight-camera", COLORS["nvs"]),
     ]
 
-    fig, axes = plt.subplots(1, 2, figsize=(9.4, 3.65), sharey=True, gridspec_kw={"width_ratios": [1.25, 0.95]})
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.05), sharey=True, gridspec_kw={"width_ratios": [1.25, 0.95]})
     fig.patch.set_facecolor("white")
 
-    for ax, (ablation, title, variants, labels) in zip(axes, panels):
+    for ax, (ablation, _title, variants, labels) in zip(axes, panels):
         x = np.arange(len(variants))
         width = 0.30
         for ei, (metric, eval_label, color) in enumerate(evals):
@@ -224,23 +224,23 @@ def render_mimicgen_ablations() -> None:
                     fmt_pct(v),
                     ha="center",
                     va="bottom",
-                    fontsize=10,
+                    fontsize=8.8,
                     color=COLORS["text"],
                     clip_on=False,
                 )
-        ax.set_title(title, pad=10)
         ax.set_xticks(x)
-        ax.set_xticklabels(labels, fontsize=11.5)
+        ax.set_xticklabels(labels, fontsize=8.8)
         ax.set_ylim(0, 66)
         ax.set_yticks([0, 25, 50])
         ax.grid(axis="y")
         ax.grid(axis="x", visible=False)
 
-    axes[0].set_ylabel("Stack Three success (%)")
+    axes[0].set_ylabel("Success (%)", fontsize=10)
+    axes[0].tick_params(axis="y", labelsize=9)
+    axes[1].tick_params(axis="y", labelsize=9)
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.04), fontsize=11.5, columnspacing=1.6, handlelength=1.7)
-    fig.suptitle("MimicGen Stack Three ablations", fontsize=20, y=1.18, color=COLORS["text"])
-    fig.tight_layout(w_pad=2.8)
+    axes[0].legend(handles, labels, loc="upper left", fontsize=8.6, handlelength=1.3, borderaxespad=0.2)
+    fig.tight_layout(w_pad=1.5)
     save(fig, "mimicgen_stack_three_ablations")
 
 
