@@ -23,16 +23,17 @@ conditions: the train-camera distribution and a tighter held-out camera
 distribution.  Fig.~\ref{fig:mimicgen-prelim} replaces the draft table with a
 multi-task result figure, which is easier to read in the main paper while the
 full run set is still evolving.  Hammer Cleanup is omitted from the current
-plot because we do not plan to run it in this round.  The NVS policy improves
-over the E2E camera-pose action policy on Stack Three, Coffee, and Threading
-under both train-camera and tight-camera evaluation.  On Stack, it matches the
-action-only variant on train-camera evaluation at 97.5\% success and improves
-tight-camera success from 2.5\% to 42.5\%.
+plot because we do not plan to run it in this round.  The final group reports a
+macro-average over the four displayed tasks.  The NVS policy improves over the
+E2E camera-pose action policy by 13.1 percentage points on train-camera
+evaluation and 23.1 points under tight-camera evaluation.  On Stack, it matches
+the action-only variant on train-camera evaluation at 97.5\% success and
+improves tight-camera success from 2.5\% to 42.5\%.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/mimicgen_multitask_results.png}
-  \caption{Preliminary MimicGen 100-demo results. Bars report episode-level success rates under train-camera and tight-camera evaluation. Diffusion Policy is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E variants match the model names in Fig.~\ref{fig:pipeline}.}
+  \caption{Preliminary MimicGen 100-demo results. Bars report episode-level success rates under train-camera and tight-camera evaluation; the shaded Mean group is the macro-average over the four displayed tasks. Diffusion Policy is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E variants match the model names in Fig.~\ref{fig:pipeline}.}
   \label{fig:mimicgen-prelim}
 \end{figure}
 

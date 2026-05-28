@@ -121,6 +121,7 @@ def render_libero() -> None:
 def render_mimicgen() -> None:
     rows = read_csv("mimicgen_multitask_results.csv")
     tasks = ["Stack Three", "Coffee", "Threading", "Stack"]
+    plot_labels = tasks + ["Mean"]
     methods = [
         ("Diffusion Policy", "Diffusion Policy\n(image)", COLORS["dp"]),
         ("ManiFlow", "ManiFlow\n(point cloud)", COLORS["maniflow"]),
@@ -129,31 +130,36 @@ def render_mimicgen() -> None:
     ]
     by_key = {(r["method"], r["task"]): r for r in rows}
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(11.6, 4.25), sharey=True)
     fig.patch.set_facecolor("white")
-    width = 0.18
-    x = np.arange(len(tasks))
+    width = 0.17
+    x = np.concatenate([np.arange(len(tasks)), np.array([len(tasks) + 0.72])])
     offsets = np.linspace(-1.5 * width, 1.5 * width, len(methods))
 
     for ax, metric, title in zip(axes, ["train_success", "tight_success"], ["Train-camera evaluation", "Tight-camera evaluation"]):
+        ax.axvspan(x[-1] - 0.52, x[-1] + 0.52, color="#F3F6FA", zorder=0)
+        ax.axvline((x[-2] + x[-1]) / 2, color=COLORS["grid"], linestyle="--", linewidth=1.4, zorder=1)
         for mi, (method, label, color) in enumerate(methods):
-            vals = []
+            task_vals = []
             for task in tasks:
                 raw = by_key[(method, task)][metric]
-                vals.append(float(raw) * 100 if raw else np.nan)
+                task_vals.append(float(raw) * 100 if raw else np.nan)
+            vals = task_vals + [float(np.nanmean(task_vals))]
             xpos = x + offsets[mi]
             bars = ax.bar(xpos, vals, width=width, label=label, color=color, alpha=0.88)
-            for b, v in zip(bars, vals):
+            bars[-1].set_edgecolor(COLORS["text"])
+            bars[-1].set_linewidth(0.8)
+            for bi, (b, v) in enumerate(zip(bars, vals)):
                 if np.isnan(v):
                     continue
                 if v >= 8:
-                    if v >= 90:
+                    if v >= 90 or bi == len(vals) - 1:
                         ax.text(b.get_x() + b.get_width() / 2, v + 1.2, fmt_pct(v), ha="center", va="bottom", fontsize=8.5, rotation=90)
                     else:
                         ax.text(b.get_x() + b.get_width() / 2, v + 1.6, fmt_pct(v), ha="center", va="bottom", fontsize=9)
         ax.set_title(title, pad=10)
         ax.set_xticks(x)
-        ax.set_xticklabels(tasks, rotation=16, ha="right")
+        ax.set_xticklabels(plot_labels, rotation=16, ha="right")
         ax.set_ylim(0, 112)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.grid(axis="y")

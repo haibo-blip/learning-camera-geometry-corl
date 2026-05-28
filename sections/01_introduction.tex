@@ -54,12 +54,12 @@ the fraction of episodes with ground-truth camera-pose labels and find that
 partial supervision can be sufficient for strong control.  On MimicGen
 tasks~\citep{mandlekar2023mimicgen}, we compare image, point-cloud, and
 end-to-end camera-pose policies under both train-camera and tight-camera
-evaluation.  The preliminary results show that the NVS variant is consistently
-stronger than the action-only variant under tight-camera evaluation, with the
-latest Stack run reaching 97.5\% train-camera success and 42.5\% tight-camera
-success.  This shifts the story from pose prediction alone toward renderable
-scene representations: target-view reconstruction appears to make the
-observation encoder preserve geometry that the action objective can reuse.
+evaluation.  Averaged across the four current MimicGen tasks, the NVS variant
+improves over the action-only variant by 13.1 percentage points on
+train-camera evaluation and 23.1 points under tight-camera evaluation.  This
+shifts the story from pose prediction alone toward renderable scene
+representations: target-view reconstruction appears to make the observation
+encoder preserve geometry that the action objective can reuse.
 
 The paper makes three contributions.  First, we formulate camera geometry
 learning as an end-to-end visuomotor control problem with episode-level
