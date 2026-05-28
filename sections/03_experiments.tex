@@ -9,10 +9,9 @@ LIBERO-MV Spatial setting as Camera-Aware Multi-View Visuomotor
 Policies~\citep{anonymous2026cameraaware}.  LIBERO-MV re-renders each LIBERO
 episode with 12 static scene cameras sampled from the upper hemisphere around
 the workspace.  During training and evaluation the policy receives two random
-surround views from this pool (\texttt{surround2}); the wrist view is omitted so
-neither single view is designed to be sufficient.  Images are resized to
+surround views.  Images are resized to
 \(128{\times}128\), actions are 32-step chunks in an end-effector action space
-with 6D rotation and gripper command, and the policy replans every 8 simulator
+with 6D rotation and gripper command, and the policy replans every 8
 steps.  After training, evaluation runs all 10 LIBERO-MV Spatial tasks with 50
 rollouts per task, for 500 rollouts per method.
 
