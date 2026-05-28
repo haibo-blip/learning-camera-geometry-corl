@@ -1,94 +1,64 @@
 \subsection{LIBERO-MV Spatial}
 
-The LIBERO-MV Spatial experiment isolates end-to-end camera-pose learning. The current sweep varies the fraction of training examples with ground-truth camera-pose labels. The 10\% setting already approaches calibrated PRoPE performance, while the best current 50\% setting exceeds the calibrated geometry-aware baselines available in the current result table.
-
-\begin{table}[h]
-  \centering
-  \caption{Current LIBERO-MV Spatial summary. Values are success rates from the local result tracker.}
-  \label{tab:libero}
-  \begin{tabular}{l c}
-    \toprule
-    Method & Spatial success \\
-    \midrule
-    ViT+CamID & 0.574 \\
-    Plucker-GT & 0.622 \\
-    PRoPE-GT & 0.842 \\
-    E2E pose-policy, best current setting & 0.865 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+The LIBERO-MV Spatial experiment isolates end-to-end camera-pose learning.  We
+vary the fraction of training episodes with ground-truth camera-pose labels and
+compare against calibrated geometry-aware references.  Fig.~\ref{fig:libero}
+shows two trends.  First, a small amount of pose supervision is already useful:
+the 10\% setting reaches a success rate close to the calibrated Plucker
+baseline.  Second, the best current 50\% setting exceeds the calibrated PRoPE
+reference in this sweep, suggesting that action loss can shape the predicted
+geometry toward what the policy needs for control.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.82\linewidth]{figures/libero_mv_spatial_summary.png}
-  \caption{Draft LIBERO-MV Spatial figure showing the current GT-pose ratio sweep and calibrated baselines.}
+  \includegraphics[width=0.95\linewidth]{figures/libero_mv_spatial_summary.png}
+  \caption{LIBERO-MV Spatial summary. Left: calibrated references and the best current E2E camera-pose action policy. Right: episode-level success as the fraction of camera-pose-labeled training episodes varies.}
   \label{fig:libero}
 \end{figure}
 
-\subsection{MimicGen camera-shift evaluation}
+\subsection{MimicGen Camera-Shift Evaluation}
 
-The MimicGen experiment evaluates train-camera and tight-camera success rates. The current result table contains four partially complete tasks, with Hammer Cleanup still pending. Each cell reports train-set camera success followed by tight-set camera success. The current results suggest that scene-token NVS improves over the action-only RayZer variant on Stack Three, Coffee, and Threading, while ManiFlow remains a strong point-cloud baseline on Stack.
-
-\begin{table}[h]
-  \centering
-  \caption{Preliminary MimicGen 100-demo results. Each cell is train-camera / tight-camera success rate. Missing entries are left blank until the corresponding runs finish.}
-  \label{tab:mimicgen-prelim}
-  \resizebox{\linewidth}{!}{%
-  \begin{tabular}{l c c c c c c}
-    \toprule
-    Method & Modality & Stack Three & Coffee & Threading & Stack & Hammer Cleanup \\
-    \midrule
-    Diffusion Policy & Image & 0.15 / 0.00 & 0.00 / 0.00 & 0.00 / 0.00 & 0.95 / 0.025 & -- \\
-    ManiFlow & Point cloud & 0.275 / 0.275 & 0.10 / 0.225 & 0.025 / 0.05 & 0.975 / 0.725 & -- \\
-    RayZer/action-only & Image & 0.30 / 0.00 & 0.025 / 0.00 & 0.05 / 0.00 & 0.975 / 0.025 & -- \\
-    RayZer + scene-token NVS & Image & 0.55 / 0.25 & 0.20 / 0.175 & 0.15 / 0.10 & -- & -- \\
-    \bottomrule
-  \end{tabular}
-  }
-\end{table}
+The MimicGen experiment evaluates episode-level success under two camera
+conditions: the train-camera distribution and a tighter held-out camera
+distribution.  Fig.~\ref{fig:mimicgen-prelim} replaces the draft table with a
+multi-task result figure, which is easier to read in the main paper while the
+full run set is still evolving.  Hammer Cleanup is omitted from the current
+plot because we do not plan to run it in this round.  The NVS policy improves
+over the E2E camera-pose action policy on the completed Stack Three, Coffee,
+and Threading runs under both train-camera and tight-camera evaluation.  The
+Stack NVS run remains pending, so the plot leaves that cell blank rather than
+imputing a value.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.52\linewidth]{figures/mimicgen_prelim_stack.png}
-  \caption{Earlier compact MimicGen comparison figure. This is a placeholder until the full multi-task result figure is regenerated.}
+  \includegraphics[width=\linewidth]{figures/mimicgen_multitask_results.png}
+  \caption{Preliminary MimicGen 100-demo results. Bars report episode-level success rates under train-camera and tight-camera evaluation. Diffusion Policy is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E variants match the model names in Fig.~\ref{fig:pipeline}.}
   \label{fig:mimicgen-prelim}
 \end{figure}
 
-\subsection{Real-world tabletop evaluation}
+\subsection{Real-World Tabletop Evaluation}
 
-We are also beginning a real-world tabletop evaluation to test whether the same
-camera-aware policy interface transfers beyond simulation.  The protocol follows
-the camera-conditioned real-robot setting of
-\citet{jiang2025knowyourcamera}: a single-arm tabletop robot observes the scene
-from wrist and external RGB cameras, the scene is reset between on-robot
-rollouts, and success is scored at the episode level.  Our difference is that
-camera geometry is not supplied as calibrated metadata at inference.  The robot
-receives RGB observations and proprioception, predicts camera geometry
-internally, constructs Plucker ray features, and executes the action expert
-without ground-truth camera poses.
+We are also beginning a real-world tabletop evaluation following the
+camera-conditioned tabletop setting of \citet{jiang2025knowyourcamera}.  For a
+first comparison, Fig.~\ref{fig:realworld-blocks} uses only their calibrated
+Plucker-GT result on Blocks-in-Bowl and compares it with our current E2E
+camera-pose NVS policy.  Camera Rays reports 50\% full-task success and 86\%
+rubric-weighted task progress over 10 trials for Plucker-GT on this task.  Our
+current Blocks-in-Bowl run has 100\% full-task success on the completed trials,
+but the final trial denominator is still pending from the run log; we therefore
+mark the result as preliminary.
 
-The first completed task is Blocks in Bowl.  The robot must pick a block and
-place it inside the bowl from the tabletop camera views.  The current
-end-to-end camera-pose NVS policy succeeds on all evaluation trials completed
-so far, giving a preliminary success rate of \(1.00\).  We keep this result
-separate from the simulation tables because the remaining real-world tasks,
-trial count denominator, and camera-perturbation ranges are still being
-finalized.
-
-\begin{table}[h]
+\begin{figure}[t]
   \centering
-  \caption{Initial real-world tabletop result. The trial count will be added
-  after the run log is finalized.}
-  \label{tab:realworld-prelim}
-  \begin{tabular}{l c c c}
-    \toprule
-    Task & Policy & Success rate & Trial count \\
-    \midrule
-    Blocks in Bowl & E2E Camera-Pose NVS Policy & 1.00 & pending log \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+  \includegraphics[width=0.68\linewidth]{figures/realworld_blocks_bowl_comparison.png}
+  \caption{Initial real-world Blocks-in-Bowl comparison. The Camera Rays number is the reported calibrated Plucker-GT result; the outlined extension shows their task-progress score. Our E2E camera-pose NVS result is preliminary until the final trial count is recorded.}
+  \label{fig:realworld-blocks}
+\end{figure}
 
-\subsection{Planned baselines and ablations}
+\subsection{Planned Baselines and Ablations}
 
-The main MimicGen table should compare image Diffusion Policy, ManiFlow or another point-cloud baseline, the E2E camera-pose action policy, and the E2E camera-pose NVS policy. Ablations should separate the effect of joint pose learning, pose-label ratio, NVS regularization, and scene-token versus PRoPE-style NVS.
+The main completed baseline set compares image Diffusion Policy, point-cloud
+ManiFlow, the E2E camera-pose action policy, and the E2E camera-pose NVS policy.
+The next ablations should separate the effects of pose-label ratio, action-loss
+end-to-end training, NVS regularization, target-view dropout, and the
+scene-token bottleneck.

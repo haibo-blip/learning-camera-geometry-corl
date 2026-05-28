@@ -1,0 +1,3 @@
+method,source,success,progress,trials,note
+Camera Rays Plucker-GT,Camera Rays Without Calibration,0.500,0.860,10,calibrated extrinsics baseline from reported Blocks-in-a-bowl table
+E2E camera-pose NVS policy,Ours,1.000,,,"preliminary; trial denominator pending final run log"

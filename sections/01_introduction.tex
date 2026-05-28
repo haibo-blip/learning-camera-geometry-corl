@@ -1,16 +1,66 @@
-Camera placement is a hidden variable in RGB-based robot imitation learning. Modern visuomotor policies can predict action chunks directly from RGB inputs and proprioception, using diffusion or flow-style action heads to model complex demonstrations~\citep{chi2023diffusionpolicy,yan2025maniflow}. Yet the pose of each camera determines which spatial relations are easy to see, which object parts are occluded, and which image cues remain stable across train and evaluation conditions. A policy trained in one camera distribution may therefore solve the demonstrations through view-specific correlations, even when the underlying manipulation problem is unchanged.
+RGB visuomotor policies have become strong action predictors: modern imitation
+learning systems can map image observations and proprioception to action chunks
+with diffusion or flow-style decoders~\citep{chi2023diffusionpolicy,yan2025maniflow}.
+However, each image is also tied to a camera pose.  The same object relation can
+project to different pixels as the camera moves, and different viewpoints expose
+different occlusions, contact cues, and spatial relations.  Most RGB policy
+recipes leave this geometry implicit, carrying view identity only through token
+slot, camera-specific encoders, or a learned camera ID.  This makes camera
+extrinsics an important but unresolved design choice for policy encoders.
 
-One response is to avoid explicit geometry and let the image encoder learn whatever spatial structure is useful for action prediction. This keeps the policy simple and avoids calibration, but it gives the model no direct representation of how pixels from different viewpoints relate to the same workspace. Another response is to supply geometry explicitly through calibrated camera poses, rays, depth, point clouds, or 3D scene representations. Such representations can improve manipulation generalization~\citep{ze2024dp3}, and camera-aware transformer encodings have also proved effective in multi-view vision tasks~\citep{li2025prope}. The tradeoff is that part of the system is moved outside the policy objective: calibration, depth sensing, reconstruction, or pose estimation becomes a prerequisite rather than something optimized for control.
+Existing systems make three different choices.  Image-only policies avoid
+calibration, but must infer cross-view correspondence from pixels alone.
+Camera-conditioned RGB policies provide geometry explicitly through calibrated
+Plucker ray maps or related pose encodings~\citep{sitzmann2021lfn,jiang2025knowyourcamera,li2025prope}.
+Point-cloud and other 3D policy pipelines provide even stronger spatial
+structure, but require depth, calibration, or a separate reconstruction
+stage~\citep{ze2024dp3}.  These choices create a calibration gap: the methods
+that expose geometry to the policy usually assume the geometry is already known,
+while the datasets and deployments where calibration is hardest are precisely
+where camera-aware representations are most useful.
 
-This paper studies the middle ground: camera geometry is represented inside the policy, but learned end-to-end with the action objective. The key question is not whether a predicted camera pose is metrically better than a calibrated pose. It is whether a policy can learn task-useful camera geometry when only a subset of training examples has camera-pose labels, and whether action loss can shape that geometry toward the correspondences needed for control. Under this view, pose prediction is not a preprocessing module whose output is frozen before policy training. It is an auxiliary pathway whose representation is anchored by partial pose supervision and refined by imitation learning.
+This paper asks whether camera geometry can be learned inside the control
+objective rather than supplied as fixed metadata.  We treat camera pose as an
+internal latent variable of the policy.  A pose predictor estimates each
+camera-to-world transform from RGB, the predicted transforms are converted into
+per-pixel ray features, and the downstream policy is trained end-to-end through
+these features.  Camera-pose labels are only required for a chosen subset of
+training episodes; all episodes still provide action supervision.  The central
+question is therefore not whether a standalone pose head is metrically optimal,
+but whether partial pose supervision plus policy loss can produce geometry that
+is useful for control.
 
-Fig.~\ref{fig:overview} illustrates the training setting and the three losses used to shape the learned geometry. We instantiate this idea with two related model variants. The first is an end-to-end camera-pose action policy. RGB observations are passed to a camera-pose predictor, the predicted pose is converted into pose or ray tokens, and an observation encoder feeds an action expert trained by behavior cloning. The pose predictor receives supervised loss only on labeled pose examples, while every example contributes action loss. The second variant adds novel-view synthesis (NVS) as a training-time auxiliary objective. It compresses the observed views into latent scene tokens that are consumed by both the action expert and an NVS decoder queried by a target camera pose. The two variants are separate model instantiations rather than a single encoder with an optional rendering head; Fig.~\ref{fig:pipeline} summarizes the corresponding architecture.
+We study two model variants, summarized in Fig.~\ref{fig:pipeline}.  The
+\emph{E2E camera-pose action policy} feeds RGB and predicted ray features into
+an observation encoder and trains an action expert by behavior cloning.  The
+\emph{E2E camera-pose NVS policy} uses a separate scene-token encoder and adds a
+training-time novel-view synthesis objective.  Given a target camera query, an
+NVS decoder reconstructs the target view from the scene tokens, following the
+view-synthesis idea that renderable latent representations must preserve object
+layout, occlusion, and camera geometry~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.
+The decoder is discarded at inference; its role is to regularize the policy
+representation during training.
 
-The motivation for the NVS variant is that action prediction alone may leave the visual representation underconstrained. Many image features can be predictive of the demonstrated action without preserving object layout, occlusion, or camera geometry. Novel-view synthesis places a different demand on the same latent tokens: given a target camera query, they must support rendering what the scene should look like from another viewpoint. This renderability constraint follows the broader view-synthesis literature, where posed rays and target-view reconstruction are used to learn scene representations~\citep{mildenhall2020nerf,sajjadi2022srt}. More directly, RayZer shows that camera parameters and scene representations can be learned through self-supervised target-view rendering even without ground-truth camera annotations~\citep{jiang2025rayzer}. In our policy, however, NVS is not an inference-time renderer. It is a training signal that pressures the observation encoder to preserve geometry useful for downstream control.
+Fig.~\ref{fig:overview} illustrates the training setting and the three
+supervision signals.  We evaluate the models in simulation and in an initial
+real-world tabletop run.  On LIBERO-MV Spatial~\citep{liu2023libero}, we vary
+the fraction of episodes with ground-truth camera-pose labels and find that
+partial supervision can be sufficient for strong control.  On MimicGen
+tasks~\citep{mandlekar2023mimicgen}, we compare image, point-cloud, and
+end-to-end camera-pose policies under both train-camera and tight-camera
+evaluation.  The preliminary results show that the NVS variant improves over
+the action-only variant on the completed tasks, suggesting that target-view
+reconstruction can improve the observation representation rather than only
+camera-shift robustness.
 
-We evaluate the resulting models in simulation and in an initial real-world tabletop run. On LIBERO-MV Spatial, built from LIBERO manipulation tasks~\citep{liu2023libero}, we vary the fraction of examples with ground-truth camera-pose labels to test whether partial supervision is enough for end-to-end pose-policy learning. The current sweep shows that the policy remains strong with a small fraction of pose labels, and that the best partial-label setting exceeds the calibrated geometry-aware baselines in our result table. On MimicGen~\citep{mandlekar2023mimicgen}, we evaluate both train-set cameras and tighter evaluation cameras across manipulation tasks. The completed tasks show that the scene-token NVS policy improves over the action-only camera-pose policy under both train-camera and tight-camera evaluation. The train-camera gains suggest that view synthesis improves the observation representation itself, while the tight-camera gains test whether that representation remains useful when camera placement shifts. We also report a preliminary Blocks-in-Bowl real-world result under a camera-conditioned tabletop protocol, where the current end-to-end NVS policy succeeds on all trials completed so far.
-
-The paper makes three contributions. We formulate camera geometry learning as an end-to-end visuomotor control problem with semi-supervised camera-pose supervision. We present two camera-aware policy variants: an action-only pose-conditioned policy and a scene-token NVS policy that uses target-view reconstruction as an auxiliary geometry constraint. We provide empirical evidence on LIBERO-MV and MimicGen that partial pose supervision can be sufficient for task-useful camera geometry, and that NVS regularization can improve both in-distribution policy learning and camera-shift generalization; an initial real-world tabletop result tests the same policy interface beyond simulation.
+The paper makes three contributions.  First, we formulate camera geometry
+learning as an end-to-end visuomotor control problem with episode-level
+semi-supervised camera-pose labels.  Second, we present two camera-aware policy
+variants, one trained only with action and pose losses and one regularized by
+scene-token novel-view synthesis.  Third, we provide initial evidence on
+LIBERO-MV, MimicGen, and a real-world Blocks-in-Bowl task that task-useful
+camera geometry can be learned inside the policy objective, reducing reliance on
+fixed calibrated metadata at inference.
 
 \begin{figure}[t]
   \centering

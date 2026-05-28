@@ -1,0 +1,10 @@
+plot,method,ratio,success
+baseline,ViT+CamID,,0.574
+baseline,Plucker-GT,,0.622
+baseline,PRoPE-GT,,0.842
+baseline,E2E camera-pose action policy,,0.865
+sweep,E2E camera-pose action policy,10,0.820
+sweep,E2E camera-pose action policy,30,0.775
+sweep,E2E camera-pose action policy,50,0.865
+sweep,E2E camera-pose action policy,80,0.780
+sweep,E2E camera-pose action policy,100,0.860
