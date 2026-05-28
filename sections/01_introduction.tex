@@ -3,10 +3,13 @@ learning systems can map image observations and proprioception to action chunks
 with diffusion or flow-style decoders~\citep{chi2023diffusionpolicy,yan2025maniflow}.
 However, each image is also tied to a camera pose.  The same object relation can
 project to different pixels as the camera moves, and different viewpoints expose
-different occlusions, contact cues, and spatial relations.  Most RGB policy
-recipes leave this geometry implicit, carrying view identity only through token
-slot, camera-specific encoders, or a learned camera ID.  This makes camera
-extrinsics an important but unresolved design choice for policy encoders.
+different occlusions, contact cues, and spatial relations.  Most image-based
+policy recipes do not expose this geometry to the model: they feed RGB
+observations directly to a policy and train it to predict actions.  In fixed or
+narrow camera setups, such policies can solve demonstrations by exploiting
+view-specific appearance cues, but these shortcuts need not transfer when camera
+placement or evaluation views change.  This makes camera extrinsics an important
+but unresolved design choice for policy encoders.
 
 Existing systems make three different choices.  Image-only policies avoid
 calibration, but must infer cross-view correspondence from pixels alone.
