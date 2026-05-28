@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "pipeline.png"
 ASSETS = ROOT / "pipeline_assets"
 
-W, H = 3800, 1850
+W, H = 3800, 1730
 FONT = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
 BOLD = Path("/System/Library/Fonts/Supplemental/Arial Bold.ttf")
 BLACK = Path("/System/Library/Fonts/Supplemental/Arial Black.ttf")
@@ -223,8 +223,8 @@ def main():
     d.text((78, 48), "End-to-end camera-pose policy variants", font=F_TITLE, fill=C_TEXT)
     d.text((80, 132), "Each model predicts camera pose inside the policy; action and NVS losses train the geometry module jointly with the encoder.", font=F_SUB, fill=C_MUTED)
 
-    left = (60, 190, 1050, 1778)
-    right = (1100, 190, 3740, 1778)
+    left = (60, 190, 1050, 1690)
+    right = (1100, 190, 3740, 1690)
     shadowed_panel(left)
     shadowed_panel(right)
     d.text((105, 235), "Scene + input views", font=F_PANEL, fill=C_TEXT)
@@ -280,9 +280,9 @@ def main():
     band_b = (1148, 960, 3690, 1668)
     rounded(band_b, r=22, fill=C_CYAN_FILL, outline=C_CYAN_STROKE, width=3)
     d.text((1195, 1012), "B  E2E camera-pose NVS policy", font=F_BAND, fill=C_TEAL_DARK)
-    rgb_views_card((1195, 1112, 1558, 1425))
-    pose_block((1658, 1206, 1938, 1336), aux_y=1384)
-    ray_maps_card((2038, 1088, 2522, 1425))
+    rgb_views_card((1195, 1112, 1558, 1407))
+    pose_block((1658, 1198, 1938, 1328), aux_y=1362)
+    ray_maps_card((2038, 1112, 2522, 1407))
     arrow([(1558, 1268), (1658, 1268)], color=C_PURPLE, width=9)
     arrow([(1938, 1268), (2038, 1268)], color=C_BLUE, width=9)
 
@@ -293,9 +293,10 @@ def main():
     labeled_tile(ray_a, (1642, 1486, 1788, 1606), "source ray", C_TEAL, label_size=17, image_frac=0.62)
     labeled_tile(view_b, (1840, 1486, 1962, 1606), "target RGB", C_RED, label_size=17, image_frac=0.62, overlay_drop=True)
     labeled_tile(ray_b, (1982, 1486, 2128, 1606), "target ray", C_RED, label_size=17, image_frac=0.62, overlay_drop=True)
-    text_fit_center((2325, 1546), "target obs may be dropped", 23, 350, fill=C_RED, bold=True)
-    arrow([(1376, 1425), (1376, 1462)], color=C_TEAL, width=7)
-    arrow([(2320, 1425), (2320, 1462)], color=C_TEAL, width=7)
+    text_fit_center((2318, 1532), "target obs dropped", 22, 330, fill=C_RED, bold=True)
+    text_fit_center((2318, 1563), "during training", 22, 330, fill=C_RED, bold=True)
+    arrow([(1376, 1407), (1376, 1462)], color=C_TEAL, width=7)
+    arrow([(2320, 1407), (2320, 1462)], color=C_TEAL, width=7)
 
     node((2630, 1210, 2920, 1340), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=31)
     labeled_tile(ray_b, (2630, 1038, 2920, 1168), "target ray query", C_BLUE, label_color=C_BLUE, label_size=21, image_frac=0.62)
@@ -317,11 +318,6 @@ def main():
     arrow([(3478, 1131), (3508, 1131)], color=C_BLUE, width=8)
     arrow([(3238, 1250), (3245, 1250), (3245, 1453), (3270, 1453)], color=C_ORANGE, width=8)
     arrow([(3478, 1453), (3508, 1453)], color=C_ORANGE, width=8)
-
-    chip(1148, 1710, "Pose predictor is inside each policy", C_PURPLE)
-    chip(1790, 1710, "Losses backprop through rays", C_TEAL)
-    chip(2385, 1710, "NVS decoder is training-time only", C_BLUE)
-    chip(3020, 1710, "Target dropout only in NVS", C_RED)
 
     img.save(OUT, quality=98)
 

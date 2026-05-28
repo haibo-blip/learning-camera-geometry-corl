@@ -157,13 +157,14 @@ geometry is inferred internally.
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/pipeline.png}
-    \caption{Model pipeline. Both variants predict camera pose from RGB and
-    construct Plucker ray maps before action prediction. The action-only policy
-    feeds ray-conditioned observations to an action expert, while the NVS policy
-    uses a separate scene-token encoder over RGB--ray observations whose tokens
-    feed both the action expert and a training-time NVS decoder. The source/target
-    view split and target-observation dropout are used only for the NVS training
-    objective. Pose supervision is applied only on labeled episodes, and the NVS
-    decoder is discarded at inference.}
+    \caption{Model pipeline. Both variants predict camera pose inside the policy
+    and construct Plucker ray maps before action prediction, so action and NVS
+    losses can backpropagate through ray construction into the pose predictor.
+    The action-only policy feeds ray-conditioned observations to an action
+    expert. The NVS policy uses a separate scene-token encoder over RGB--ray
+    observations whose tokens feed both the action expert and a training-time NVS
+    decoder. Source/target selection and target-observation dropout are used
+    only for NVS training; the NVS decoder is discarded at inference. Pose
+    supervision is applied only on labeled episodes.}
     \label{fig:pipeline}
 \end{figure}
