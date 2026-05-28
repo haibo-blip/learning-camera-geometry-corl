@@ -13,17 +13,18 @@ but unresolved design choice for policy encoders.
 
 Existing systems make three different choices.  Image-only policies avoid
 calibration, but must infer cross-view correspondence from pixels alone.
-Camera-conditioned RGB policies provide geometry explicitly through calibrated
-Plucker ray maps or related pose encodings~\citep{sitzmann2021lfn,anonymous2026cameraaware,li2025prope}.
-Point-cloud and other 3D policy pipelines provide even stronger spatial
-structure, but require depth, calibration, or a separate reconstruction
-stage~\citep{ze2024dp3}.  These choices create a calibration and architecture
-gap.  Geometry-aware RGB policies usually assume known extrinsics, so many
-uncalibrated demonstrations cannot contribute their explicit ray features even
-when the RGB observations and action labels are still useful.  Point-cloud
-pipelines face an additional cost: they require depth or reconstruction and
-modality-specific 3D encoders, rather than directly reusing mature pretrained
-image backbones such as ViTs.
+Recent camera-aware RGB policy work exposes geometry through calibrated
+Plucker ray maps or related pose encodings~\citep{anonymous2026cameraaware},
+with similar ray and pose encodings also used in view synthesis
+models~\citep{sitzmann2021lfn,li2025prope}.  Point-cloud policies provide even
+stronger spatial structure, but require depth and calibration~\citep{ze2024dp3}.
+These choices create a calibration and architecture gap.  Geometry-aware RGB
+policies usually assume known extrinsics, so many uncalibrated demonstrations
+cannot contribute their explicit ray features even when the RGB observations and
+action labels are still useful.  Point-cloud pipelines face an additional cost:
+datasets without depth cannot be used directly, and the policy typically uses
+modality-specific 3D encoders rather than mature pretrained image backbones such
+as ViTs.
 
 This paper asks whether camera geometry can be learned inside the control
 objective rather than supplied as fixed metadata.  We treat camera pose as an
@@ -37,16 +38,11 @@ whether a standalone pose head is metrically optimal, but whether partial pose
 supervision plus task loss can turn unlabeled camera episodes into useful
 training signal for control.
 
-We study two model variants, summarized in Fig.~\ref{fig:pipeline}.  The
-\emph{E2E camera-pose action policy} feeds RGB and predicted ray features into
-an observation encoder and trains an action expert by behavior cloning.  The
-\emph{E2E camera-pose NVS policy} uses a separate scene-token encoder and adds a
-training-time novel-view synthesis objective.  Given a target camera query, an
-NVS decoder reconstructs the target view from the scene tokens, following the
-view-synthesis idea that renderable latent representations must preserve object
-layout, occlusion, and camera geometry~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.
-The decoder is discarded at inference; its role is to regularize the policy
-representation during training.
+We study two model variants, summarized in Fig.~\ref{fig:pipeline}: an
+action-only camera-pose policy and an NVS-regularized policy.  Both predict
+camera pose inside the policy and train end-to-end from action supervision; the
+NVS variant additionally uses target-view reconstruction to regularize the
+observation representation during training.
 
 Fig.~\ref{fig:overview} illustrates the training setting and the three
 supervision signals.  We evaluate the models in simulation and in an initial

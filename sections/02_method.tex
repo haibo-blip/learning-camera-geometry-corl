@@ -1,4 +1,19 @@
-Our goal is to train an RGB policy that can use camera geometry without requiring calibrated camera poses at test time.  The central design is to make camera pose an internal latent variable: a pose predictor estimates the camera-to-world transform of each input view, the estimated transforms are converted into per-pixel ray features, and the downstream policy is trained end-to-end through these geometric features.  As shown in Fig.~\ref{fig:pipeline}, we instantiate this idea in two variants.  The first variant trains an action policy directly from predicted camera geometry.  The second variant adds a scene-token novel-view synthesis objective that encourages the observation representation to preserve 3D scene structure.
+Our goal is to train an RGB policy that can use camera geometry without
+requiring calibrated camera poses at test time.  The central design is to make
+camera pose an internal latent variable: a pose predictor estimates the
+camera-to-world transform of each input view, the estimated transforms are
+converted into per-pixel ray features, and the downstream policy is trained
+end-to-end through these geometric features.  As shown in
+Fig.~\ref{fig:pipeline}, we instantiate this idea in two variants.  The
+\emph{E2E camera-pose action policy} feeds RGB and predicted ray features into
+an observation encoder and trains an action expert by behavior cloning.  The
+\emph{E2E camera-pose NVS policy} uses a separate scene-token encoder and adds a
+training-time novel-view synthesis objective.  Given a target camera query, an
+NVS decoder reconstructs the target view from the scene tokens, following the
+view-synthesis idea that renderable latent representations must preserve object
+layout, occlusion, and camera geometry~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.
+The decoder is discarded at inference; its role is to regularize the policy
+representation during training.
 
 \subsection{Problem Setup}
 
