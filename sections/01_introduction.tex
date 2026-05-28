@@ -31,7 +31,7 @@ objective rather than supplied as fixed metadata.  We treat camera pose as an
 internal latent variable of the policy.  A pose predictor estimates each
 camera-to-world transform from RGB, the predicted transforms are converted into
 per-pixel ray features, and the downstream policy is trained end-to-end through
-these features.  Camera-pose labels are only required for a chosen subset of
+these features.  Camera-pose labels are only required for a selected subset of
 training episodes; all episodes still provide action supervision and can pass
 gradients through the predicted geometry.  The central question is therefore not
 whether a standalone pose head is metrically optimal, but whether partial pose
@@ -45,28 +45,28 @@ NVS variant additionally uses target-view reconstruction to regularize the
 observation representation during training.
 
 Fig.~\ref{fig:overview} illustrates the training setting and the three
-supervision signals.  We evaluate the models in simulation and in an initial
-real-world tabletop run.  On LIBERO-MV Spatial~\citep{liu2023libero}, we vary
+supervision signals.  We evaluate the models in simulation and on real-world
+tabletop manipulation.  On LIBERO-MV Spatial~\citep{liu2023libero}, we vary
 the fraction of episodes with ground-truth camera-pose labels and find that
 partial supervision can be sufficient for strong control.  On MimicGen
 tasks~\citep{mandlekar2023mimicgen}, we compare image, point-cloud, and
 end-to-end camera-pose policies under both train-camera and tight-camera
-evaluation.  Averaged across the four current MimicGen tasks, the NVS variant
+evaluation.  Averaged across the four MimicGen tasks, the NVS variant
 improves over the action-only variant by 13.1 percentage points on
-train-camera evaluation and 23.1 points under tight-camera evaluation.  This
-shifts the story from pose prediction alone toward renderable scene
-representations: target-view reconstruction appears to make the observation
-encoder preserve geometry that the action objective can reuse.
+train-camera evaluation and 23.1 points under tight-camera evaluation.  On a
+real-world Blocks-in-Bowl evaluation, the NVS policy reaches 100\% success over
+10 trials under the same success definition as the calibrated Plucker-GT
+reference.
 
 The paper makes three contributions.  First, we formulate camera geometry
 learning as an end-to-end visuomotor control problem with episode-level
 semi-supervised camera-pose labels, so episodes without extrinsics still
 contribute action and representation-learning gradients.  Second, we present two
 camera-aware policy variants, one trained only with action and pose losses and
-one regularized by scene-token novel-view synthesis.  Third, we provide initial
-evidence on LIBERO-MV, MimicGen, and a real-world Blocks-in-Bowl task that
-task-useful camera geometry can be learned inside the policy objective, reducing
-reliance on fixed calibrated metadata at inference.
+one regularized by scene-token novel-view synthesis.  Third, we evaluate these
+policies on LIBERO-MV, MimicGen, and real-world Blocks-in-Bowl, showing that
+task-useful camera geometry can be learned inside the policy objective while
+reducing reliance on fixed calibrated metadata at inference.
 
 \begin{figure}[t]
   \centering

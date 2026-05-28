@@ -127,8 +127,8 @@ implementation, the encoder appends learned active scene tokens to the
 multi-view patch sequence.  After transformer self-attention, the view patch
 tokens are discarded and only the active scene tokens are retained.  The NVS
 branch therefore decodes from a latent scene-token bottleneck rather than
-directly from the full source patch sequence.  In the current implementation
-\(M=64\) active scene tokens.  The action expert uses these tokens together
+directly from the full source patch sequence.  We use \(M=64\) active scene
+tokens.  The action expert uses these tokens together
 with proprioception and task conditioning:
 \begin{equation}
 z_t^{\text{scene}} = \text{concat}(R_t, q_t, c), \qquad

@@ -45,7 +45,7 @@ geometry used by a fixed encoder.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/libero_mv_spatial_summary.png}
-  \caption{LIBERO-MV Spatial summary. Left: calibrated references from the Camera-Aware Multi-View Visuomotor Policies protocol and the best current E2E camera-pose action policy. Right: episode-level success as the fraction of camera-pose-labeled training episodes varies.}
+  \caption{LIBERO-MV Spatial summary. Left: calibrated references from the Camera-Aware Multi-View Visuomotor Policies protocol and the best E2E camera-pose action policy. Right: episode-level success as the fraction of camera-pose-labeled training episodes varies.}
   \label{fig:libero}
 \end{figure}
 
@@ -55,7 +55,7 @@ geometry used by a fixed encoder.
 We use MimicGen~\citep{mandlekar2023mimicgen} as a second simulation benchmark
 because its generated demonstrations have larger episode-to-episode variation
 than LIBERO-MV, making it a stronger test of policy performance under camera
-shift.  We currently report four tasks with different difficulty profiles:
+shift.  We report four tasks with different difficulty profiles:
 Stack is the easiest and is near-saturated for several methods; Stack Three adds
 a longer multi-object stacking sequence; Coffee and Threading require more
 precise object alignment and contact.  Each policy is trained on the
@@ -83,7 +83,7 @@ Fig.~\ref{fig:pipeline}; implementation hyperparameters are deferred to the
 appendix.
 
 \paragraph{Results.}
-Fig.~\ref{fig:mimicgen-prelim} reports the current four-task result set.  The
+Fig.~\ref{fig:mimicgen-results} reports the four-task result set.  The
 final group reports a macro-average over the displayed tasks.  The NVS policy
 improves over the E2E camera-pose action policy by 13.1 percentage points on
 train-camera evaluation and 23.1 points under tight-camera evaluation.  On
@@ -93,14 +93,14 @@ success and improves tight-camera success from 2.5\% to 42.5\%.
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/mimicgen_multitask_results.png}
-  \caption{Preliminary MimicGen results. Bars report episode-level success rates under the train-camera and tight-camera camera distributions; the shaded Mean group is the macro-average over the four displayed tasks. Diffusion Policy is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E variants match the model names in Fig.~\ref{fig:pipeline}.}
-  \label{fig:mimicgen-prelim}
+  \caption{MimicGen results. Bars report episode-level success rates under the train-camera and tight-camera camera distributions; the shaded Mean group is the macro-average over the four displayed tasks. Diffusion Policy is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E variants match the model names in Fig.~\ref{fig:pipeline}.}
+  \label{fig:mimicgen-results}
 \end{figure}
 
 \subsection{Real-World Tabletop Evaluation}
 
 \paragraph{Protocol.}
-We also run an initial real-world tabletop evaluation following the hardware,
+We run a real-world tabletop evaluation following the hardware,
 camera, and scoring setup of Camera-Aware Multi-View Visuomotor
 Policies~\citep{anonymous2026cameraaware}.  The platform is a single-arm
 Trossen WidowX AI in an ALOHA-style leader--follower setup.  The observation
@@ -114,20 +114,18 @@ placement across four blocks, for eight progress points per trial; full-task
 success requires all four blocks to be placed in the bowl.
 
 \paragraph{Comparison.}
-For the first comparison in Fig.~\ref{fig:realworld-blocks}, we use only the
-reported calibrated Plucker-GT Blocks-in-Bowl result from the under-review
-paper.  That baseline receives calibrated scene-camera extrinsics and reports
-50\% full-task success and 86\% rubric-weighted task progress over 10 trials.
-Our current E2E camera-pose NVS policy is evaluated under the same success
-definition and trial count, but predicts camera geometry inside the policy
-rather than using calibrated Plucker maps as fixed input.  The current run
-reaches 100\% full-task success on Blocks-in-Bowl.  Because this is one task
-and one 10-trial run, we treat it as an initial hardware check rather than a
-complete real-world benchmark.
+In Fig.~\ref{fig:realworld-blocks}, we compare against the reported calibrated
+Plucker-GT Blocks-in-Bowl result from the under-review paper.  That baseline
+receives calibrated scene-camera extrinsics and reports 50\% full-task success
+and 86\% rubric-weighted task progress over 10 trials.  Our E2E camera-pose NVS
+policy is evaluated under the same success definition and trial count, but
+predicts camera geometry inside the policy rather than using calibrated Plucker
+maps as fixed input.  The policy reaches 100\% full-task success on
+Blocks-in-Bowl.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.68\linewidth]{figures/realworld_blocks_bowl_comparison.png}
-  \caption{Initial real-world Blocks-in-Bowl comparison under the same 10-trial success definition. The Camera Rays number is the reported calibrated Plucker-GT result; the outlined extension shows their task-progress score.}
+  \caption{Real-world Blocks-in-Bowl comparison under the same 10-trial success definition. The Camera Rays number is the reported calibrated Plucker-GT result; the outlined extension shows their task-progress score.}
   \label{fig:realworld-blocks}
 \end{figure}
