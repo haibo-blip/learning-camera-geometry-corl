@@ -1,4 +1,4 @@
-Our goal is to train an RGB policy that can use camera geometry without requiring calibrated camera poses at test time.  The central design is to make camera pose an internal latent variable: a pose predictor estimates the camera-to-world transform of each input view, the estimated transforms are converted into per-pixel ray features, and the downstream policy is trained end-to-end through these geometric features.  We instantiate this idea in two variants.  The first variant trains an action policy directly from predicted camera geometry.  The second variant adds a scene-token novel-view synthesis objective that encourages the observation representation to preserve 3D scene structure.
+Our goal is to train an RGB policy that can use camera geometry without requiring calibrated camera poses at test time.  The central design is to make camera pose an internal latent variable: a pose predictor estimates the camera-to-world transform of each input view, the estimated transforms are converted into per-pixel ray features, and the downstream policy is trained end-to-end through these geometric features.  As shown in Fig.~\ref{fig:pipeline}, we instantiate this idea in two variants.  The first variant trains an action policy directly from predicted camera geometry.  The second variant adds a scene-token novel-view synthesis objective that encourages the observation representation to preserve 3D scene structure.
 
 \subsection{Problem Setup}
 
@@ -156,10 +156,12 @@ geometry is inferred internally.
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.95\linewidth]{figures/teaser.png}
-    \caption{Overview of the proposed training signals.  The main policy learns
-    from action supervision while a semi-supervised camera-pose loss and an
-    optional novel-view synthesis loss encourage the observation representation
-    to encode camera geometry and 3D scene structure.}
-    \label{fig:teaser}
+    \includegraphics[width=\linewidth]{figures/pipeline.png}
+    \caption{Model pipeline. Both variants predict camera pose from RGB and
+    construct Plucker ray maps before action prediction. The action-only policy
+    feeds ray-conditioned observations to an action expert, while the NVS policy
+    uses a separate scene-token encoder whose tokens feed both the action expert
+    and a training-time NVS decoder. Pose supervision is applied only on labeled
+    episodes, and the NVS decoder is discarded at inference.}
+    \label{fig:pipeline}
 \end{figure}
