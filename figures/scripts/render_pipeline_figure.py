@@ -175,6 +175,23 @@ def pair_card(box, title, rgb_img, ray_img, stroke, dropped=False, title_size=24
     labeled_tile(ray_img, (x0 + 16 + tile_w + gap, inner_top, x0 + 16 + tile_w * 2 + gap, inner_bottom), "ray", stroke, label_size=20, overlay_drop=dropped)
 
 
+def scene_token_glyph(box, label, stroke=C_TEAL, fill="#def7e3", label_size=22):
+    x0, y0, x1, y1 = map(int, box)
+    rounded((x0, y0, x1, y1), r=16, fill="white", outline=stroke, width=4)
+    token_w, token_h = 30, 62
+    gap = 13
+    total_w = token_w * 4 + gap * 3
+    start_x = x0 + (x1 - x0 - total_w) // 2
+    top = y0 + 18
+    for idx in range(4):
+        tx = start_x + idx * (token_w + gap)
+        d.rounded_rectangle((tx, top, tx + token_w, top + token_h), radius=7, fill=fill, outline="#65c878", width=3)
+        d.line((tx + 7, top + 13, tx + token_w - 7, top + 13), fill="#9ee0aa", width=2)
+        d.line((tx + 7, top + 31, tx + token_w - 7, top + 31), fill="#9ee0aa", width=2)
+        d.line((tx + 7, top + 49, tx + token_w - 7, top + 49), fill="#9ee0aa", width=2)
+    text_fit_center(((x0 + x1) / 2, y1 - 23), label, label_size, (x1 - x0) - 18, fill=stroke, bold=True)
+
+
 def plucker(size=(330, 185), phase=0.0):
     w, h = size
     xx = np.linspace(0, 1, w)[None, :]
@@ -298,25 +315,21 @@ def main():
     arrow([(1376, 1407), (1376, 1462)], color=C_TEAL, width=7)
     arrow([(2320, 1407), (2320, 1462)], color=C_TEAL, width=7)
 
+    scene_token_glyph((2650, 1038, 2900, 1168), "scene token", label_size=21)
     node((2630, 1210, 2920, 1340), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=31)
-    labeled_tile(ray_b, (2630, 1038, 2920, 1168), "target ray query", C_BLUE, label_color=C_BLUE, label_size=21, image_frac=0.62)
-    grid_x, grid_y = 3008, 1168
-    for row in range(8):
-        for col in range(8):
-            x = grid_x + col * 32
-            y = grid_y + row * 26
-            d.rounded_rectangle((x, y, x + 18, y + 18), radius=4, fill="#def7e3", outline="#65c878", width=2)
-    text_center((grid_x + 112, grid_y + 232), "scene tokens", F_SMALL, fill=C_MUTED)
+    scene_token_glyph((3000, 1162, 3238, 1352), "updated scene token", label_size=20)
+    labeled_tile(ray_b, (3000, 1016, 3238, 1130), "target ray query", C_BLUE, label_color=C_BLUE, label_size=19, image_frac=0.58)
     node((3270, 1068, 3478, 1194), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=33)
     labeled_tile(view_b, (3508, 1028, 3668, 1234), "NVS objective", C_BLUE, label_size=21, image_frac=0.64)
     node((3270, 1390, 3478, 1516), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=33)
     labeled_tile(action_crop, (3508, 1350, 3668, 1558), "action objective", C_ORANGE, label_size=19, image_frac=0.62)
     arrow([(2522, 1538), (2580, 1538), (2580, 1268), (2630, 1268)], color=C_TEAL, width=9)
-    arrow([(2920, 1268), (3008, 1268)], color=C_TEAL, width=8)
-    arrow([(3238, 1250), (3245, 1250), (3245, 1131), (3270, 1131)], color=C_BLUE, width=8)
-    arrow([(2920, 1103), (3270, 1103)], color=C_BLUE, width=7)
+    arrow([(2775, 1168), (2775, 1210)], color=C_TEAL, width=7)
+    arrow([(2920, 1268), (3000, 1268)], color=C_TEAL, width=8)
+    arrow([(3238, 1220), (3245, 1220), (3245, 1131), (3270, 1131)], color=C_BLUE, width=8)
+    arrow([(3238, 1074), (3270, 1103)], color=C_BLUE, width=7)
     arrow([(3478, 1131), (3508, 1131)], color=C_BLUE, width=8)
-    arrow([(3238, 1250), (3245, 1250), (3245, 1453), (3270, 1453)], color=C_ORANGE, width=8)
+    arrow([(3238, 1308), (3245, 1308), (3245, 1453), (3270, 1453)], color=C_ORANGE, width=8)
     arrow([(3478, 1453), (3508, 1453)], color=C_ORANGE, width=8)
 
     img.save(OUT, quality=98)
