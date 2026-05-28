@@ -97,6 +97,23 @@ success and improves tight-camera success from 2.5\% to 42.5\%.
   \label{fig:mimicgen-results}
 \end{figure}
 
+\paragraph{Ablations.}
+Fig.~\ref{fig:mimicgen-ablations} isolates two design choices on Stack Three.
+Removing both end-to-end camera-pose prediction and NVS gives 17.5\% success on
+train-camera evaluation and 0\% under tight-camera evaluation.  Adding
+end-to-end pose prediction improves train-camera success to 30\%, while adding
+NVS raises performance to 55\% train-camera and 25\% tight-camera success.  For
+the NVS model, removing the scene-token bottleneck keeps train-camera success at
+55\% but reduces tight-camera success from 25\% to 7.5\%, suggesting that the
+latent scene-token bottleneck is most helpful under camera shift.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{figures/mimicgen_stack_three_ablations.png}
+  \caption{Stack Three ablations on MimicGen. Left: effect of end-to-end camera-pose prediction and NVS. Right: effect of the NVS scene-token bottleneck.}
+  \label{fig:mimicgen-ablations}
+\end{figure}
+
 \subsection{Real-World Tabletop Evaluation}
 
 \paragraph{Protocol.}

@@ -1,0 +1,6 @@
+ablation,variant,train_success,tight_success
+objective,No E2E pose or NVS,0.175,0.000
+objective,E2E pose only,0.300,0.000
+objective,E2E pose + NVS,0.550,0.250
+scene_token,NVS without scene tokens,0.550,0.075
+scene_token,NVS with scene tokens,0.550,0.250

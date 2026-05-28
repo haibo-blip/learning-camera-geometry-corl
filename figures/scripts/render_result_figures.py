@@ -51,7 +51,9 @@ def read_csv(name: str) -> list[dict[str, str]]:
 
 def save(fig: plt.Figure, name: str) -> None:
     fig.savefig(ROOT / f"{name}.png", dpi=450)
-    fig.savefig(ROOT / f"{name}.svg")
+    svg_path = ROOT / f"{name}.svg"
+    fig.savefig(svg_path)
+    svg_path.write_text("\n".join(line.rstrip() for line in svg_path.read_text().splitlines()) + "\n")
     plt.close(fig)
 
 
@@ -183,6 +185,65 @@ def render_mimicgen() -> None:
     save(fig, "mimicgen_multitask_results")
 
 
+def render_mimicgen_ablations() -> None:
+    rows = read_csv("mimicgen_stack_three_ablations.csv")
+    panels = [
+        (
+            "objective",
+            "E2E camera pose and NVS",
+            ["No E2E pose or NVS", "E2E pose only", "E2E pose + NVS"],
+            ["No E2E pose\nor NVS", "E2E pose\nonly", "E2E pose\n+ NVS"],
+        ),
+        (
+            "scene_token",
+            "Scene-token bottleneck",
+            ["NVS without scene tokens", "NVS with scene tokens"],
+            ["NVS w/o\nscene tokens", "NVS w/\nscene tokens"],
+        ),
+    ]
+    by_key = {(r["ablation"], r["variant"]): r for r in rows}
+    evals = [
+        ("train_success", "Train-camera", COLORS["plucker"]),
+        ("tight_success", "Tight-camera", COLORS["nvs"]),
+    ]
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.4, 3.65), sharey=True, gridspec_kw={"width_ratios": [1.25, 0.95]})
+    fig.patch.set_facecolor("white")
+
+    for ax, (ablation, title, variants, labels) in zip(axes, panels):
+        x = np.arange(len(variants))
+        width = 0.30
+        for ei, (metric, eval_label, color) in enumerate(evals):
+            vals = [float(by_key[(ablation, variant)][metric]) * 100 for variant in variants]
+            xpos = x + (ei - 0.5) * width
+            bars = ax.bar(xpos, vals, width=width, label=eval_label, color=color, alpha=0.90)
+            for b, v in zip(bars, vals):
+                ax.text(
+                    b.get_x() + b.get_width() / 2,
+                    max(v + 1.2, 1.4),
+                    fmt_pct(v),
+                    ha="center",
+                    va="bottom",
+                    fontsize=10,
+                    color=COLORS["text"],
+                    clip_on=False,
+                )
+        ax.set_title(title, pad=10)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, fontsize=11.5)
+        ax.set_ylim(0, 66)
+        ax.set_yticks([0, 25, 50])
+        ax.grid(axis="y")
+        ax.grid(axis="x", visible=False)
+
+    axes[0].set_ylabel("Stack Three success (%)")
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.04), fontsize=11.5, columnspacing=1.6, handlelength=1.7)
+    fig.suptitle("MimicGen Stack Three ablations", fontsize=20, y=1.18, color=COLORS["text"])
+    fig.tight_layout(w_pad=2.8)
+    save(fig, "mimicgen_stack_three_ablations")
+
+
 def render_realworld() -> None:
     rows = read_csv("realworld_blocks_bowl.csv")
     labels = [
@@ -218,6 +279,7 @@ def main() -> None:
     setup()
     render_libero()
     render_mimicgen()
+    render_mimicgen_ablations()
     render_realworld()
 
 
