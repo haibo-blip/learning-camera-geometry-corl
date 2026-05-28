@@ -42,16 +42,15 @@ We are also beginning a real-world tabletop evaluation following the
 camera-conditioned tabletop setting of \citet{jiang2025knowyourcamera}.  For a
 first comparison, Fig.~\ref{fig:realworld-blocks} uses only their calibrated
 Plucker-GT result on Blocks-in-Bowl and compares it with our current E2E
-camera-pose NVS policy.  Camera Rays reports 50\% full-task success and 86\%
-rubric-weighted task progress over 10 trials for Plucker-GT on this task.  Our
-current Blocks-in-Bowl run has 100\% full-task success on the completed trials,
-but the final trial denominator is still pending from the run log; we therefore
-mark the result as preliminary.
+camera-pose NVS policy under the same success definition and 10-trial protocol.
+Camera Rays reports 50\% full-task success and 86\% rubric-weighted task
+progress for Plucker-GT on this task.  Our current Blocks-in-Bowl run reaches
+100\% full-task success.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.68\linewidth]{figures/realworld_blocks_bowl_comparison.png}
-  \caption{Initial real-world Blocks-in-Bowl comparison. The Camera Rays number is the reported calibrated Plucker-GT result; the outlined extension shows their task-progress score. Our E2E camera-pose NVS result is preliminary until the final trial count is recorded.}
+  \caption{Initial real-world Blocks-in-Bowl comparison under the same 10-trial success definition. The Camera Rays number is the reported calibrated Plucker-GT result; the outlined extension shows their task-progress score.}
   \label{fig:realworld-blocks}
 \end{figure}
 

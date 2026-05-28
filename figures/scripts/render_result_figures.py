@@ -164,7 +164,10 @@ def render_mimicgen() -> None:
 
 def render_realworld() -> None:
     rows = read_csv("realworld_blocks_bowl.csv")
-    labels = ["Camera Rays\nPlucker-GT\n(n=10)", "Ours: E2E camera-pose\nNVS policy\n(n pending)"]
+    labels = [
+        f"Camera Rays\nPlucker-GT\n(n={rows[0]['trials']})",
+        f"Ours: E2E camera-pose\nNVS policy\n(n={rows[1]['trials']})",
+    ]
     success = [float(rows[0]["success"]) * 100, float(rows[1]["success"]) * 100]
     progress = [float(rows[0]["progress"]) * 100 if rows[0]["progress"] else np.nan, np.nan]
     colors = [COLORS["plucker"], COLORS["nvs"]]
