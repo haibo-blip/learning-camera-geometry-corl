@@ -19,12 +19,12 @@ with similar ray and pose encodings also used in view synthesis
 models~\citep{sitzmann2021lfn,li2025prope}.  Point-cloud policies provide even
 stronger spatial structure, but require depth and calibration~\citep{ze2024dp3}.
 These choices create a calibration and architecture gap.  Geometry-aware RGB
-policies usually assume known extrinsics, so many uncalibrated demonstrations
-cannot contribute their explicit ray features even when the RGB observations and
-action labels are still useful.  Point-cloud pipelines face an additional cost:
-datasets without depth cannot be used directly, and the policy typically uses
-modality-specific 3D encoders rather than mature pretrained image backbones such
-as ViTs.
+policies usually assume known extrinsics, so methods that rely on explicit rays
+cannot directly use many uncalibrated demonstrations, even though their RGB
+observations and action labels are still useful.  Point-cloud pipelines face an
+additional cost: datasets without depth cannot be used directly, and the policy
+typically uses modality-specific 3D encoders rather than mature pretrained image
+backbones such as ViTs.
 
 This paper asks whether camera geometry can be learned inside the control
 objective rather than supplied as fixed metadata.  We treat camera pose as an

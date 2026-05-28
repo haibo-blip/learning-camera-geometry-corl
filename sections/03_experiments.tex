@@ -1,37 +1,28 @@
-\subsection{Evaluation Conventions}
-
-All simulation results report episode-level task success from environment
-rollouts.  A rollout is counted as successful only when the simulator task
-predicate is satisfied within the rollout horizon.  For MimicGen, each plotted
-cell uses 40 rollouts with dataset initial states.  For LIBERO-MV, the
-calibrated reference bars use the 500-rollout setting reported in
-Camera-Aware Multi-View Visuomotor Policies~\citep{anonymous2026cameraaware};
-our current semi-supervised camera-pose sweep uses the same camera-generation
-and observation protocol, but is preliminary at 20 rollouts per task.  Real-world
-results report the same 10-trial Blocks-in-Bowl full-success definition and
-rubric progress used by that protocol.
-
 \subsection{LIBERO-MV Spatial}
 
-\paragraph{Protocol.}
-We use LIBERO-MV Spatial from the under-review camera-aware policy
-study~\citep{anonymous2026cameraaware} and restate the full setting here for
-completeness.  LIBERO-MV re-renders each LIBERO episode with 12 static scene
-cameras sampled from the upper hemisphere around the workspace.  During training
-and evaluation the policy receives two random surround views from this pool
-(\texttt{surround2}); the wrist view is omitted so neither single view is
-designed to be sufficient.  Images are resized to \(128{\times}128\), actions
-are 32-step chunks in an end-effector action space with 6D rotation and gripper
-command, and the policy replans every 8 simulator steps.  The calibrated
-references use the original LIBERO-MV Spatial evaluation budget: 10 tasks with
-50 rollouts per task.
+\paragraph{Goal and protocol.}
+The LIBERO-MV Spatial experiment isolates how much camera-pose supervision is
+needed for end-to-end camera-pose learning.  We vary the fraction of training
+episodes with pose labels and compare against policies trained with ground-truth
+camera geometry.  To make this comparison meaningful, we follow the same
+LIBERO-MV Spatial setting as Camera-Aware Multi-View Visuomotor
+Policies~\citep{anonymous2026cameraaware}.  LIBERO-MV re-renders each LIBERO
+episode with 12 static scene cameras sampled from the upper hemisphere around
+the workspace.  During training and evaluation the policy receives two random
+surround views from this pool (\texttt{surround2}); the wrist view is omitted so
+neither single view is designed to be sufficient.  Images are resized to
+\(128{\times}128\), actions are 32-step chunks in an end-effector action space
+with 6D rotation and gripper command, and the policy replans every 8 simulator
+steps.  After training, evaluation runs all 10 LIBERO-MV Spatial tasks with 50
+rollouts per task, for 500 rollouts per method.
 
 \paragraph{Compared methods.}
 The reference methods share the same policy backbone and action decoder but
 change how camera geometry enters the observation encoder.  \texttt{ViT+CamID}
 uses RGB with a learned camera identity but no metric camera geometry.
 \texttt{Plucker-GT} concatenates calibrated per-pixel Plucker ray maps to RGB.
-\texttt{PRoPE-GT} injects calibrated relative camera pose inside attention.  Our
+\texttt{PRoPE-GT} injects calibrated relative camera pose inside attention.  We
+use the reported calibrated results from the original study when available.  Our
 E2E camera-pose action policy replaces calibrated extrinsics with poses predicted
 from RGB, constructs Plucker rays from those predictions, and trains the pose
 head jointly with the action objective.  Pose supervision is assigned at the
@@ -44,12 +35,12 @@ We vary the fraction of pose-labeled training episodes over
 episode-level split seed, and unlabeled episodes remain in the behavior-cloning
 dataset.  Fig.~\ref{fig:libero} shows two trends.  First, a small amount of pose
 supervision is already useful: the 10\% setting reaches a success rate close to
-the calibrated Plucker baseline.  Second, the best current 50\% setting exceeds
-the calibrated PRoPE reference in this sweep, suggesting that action loss can
-shape predicted geometry toward what the policy needs for control.  Because the
-current sweep uses fewer rollouts than the reported calibrated reference bars, we
-treat this result as a protocol-matched preliminary comparison and will rerun
-the final cells at the full evaluation budget.
+the calibrated Plucker baseline.  Second, although our ray construction follows
+the Plucker representation, and the calibrated Plucker baseline is weaker than
+PRoPE on Spatial, the best 50\% end-to-end setting exceeds the calibrated PRoPE
+reference.  This suggests that action loss can shape predicted geometry toward
+what the policy needs for control, rather than merely reproducing the calibrated
+geometry used by a fixed encoder.
 
 \begin{figure}[t]
   \centering
@@ -61,53 +52,38 @@ the final cells at the full evaluation budget.
 \subsection{MimicGen Camera-Shift Evaluation}
 
 \paragraph{Dataset and splits.}
-MimicGen is our main camera-shift benchmark because it lets us render the same
-task family under controlled training and evaluation camera distributions.  We
-currently report four tasks: Stack Three, Coffee, Threading, and Stack.  Each
-policy is trained on the corresponding MimicGen multicamera demonstrations with
-12 random surround cameras available per episode.  We use a deterministic
-demo-level validation split with \(5\%\) held out by
-\(\mathrm{md5}(\texttt{split\_seed},\texttt{dataset\_path},\texttt{demo\_key})\)
-and split seed 0.  The training dataloader uses only the train split; rollout
-evaluation can draw initial states from either split.  The results in
-Fig.~\ref{fig:mimicgen-prelim} use train-split initial states so camera-shift,
-rather than unseen object initialization, is the isolated variable.  We also log
-validation-split initial-state rollouts with the same two camera modes, but do
-not include them in the current main figure.
+We use MimicGen~\citep{mandlekar2023mimicgen} as a second simulation benchmark
+because its generated demonstrations have larger episode-to-episode variation
+than LIBERO-MV, making it a stronger test of policy performance under camera
+shift.  We currently report four tasks with different difficulty profiles:
+Stack is the easiest and is near-saturated for several methods; Stack Three adds
+a longer multi-object stacking sequence; Coffee and Threading require more
+precise object alignment and contact.  Each policy is trained on the
+corresponding MimicGen multicamera demonstrations with 12 random surround
+cameras available per episode.  We hold out 5\% of demonstrations with a fixed
+split seed and train on the remaining demos.
 
 \paragraph{Camera distributions.}
-Each training sample draws views from the \texttt{train\_wide} camera
-distribution.  This distribution samples 12 look-at cameras with distance in
-\([0.25,1.5]\) m, height offset in \([-0.3,1.0]\) m, \(45^\circ\) vertical field
-of view, and up to 0.15 m target jitter; it does not reject views that only
-partially cover the workspace.  The held-out \texttt{eval\_tight} distribution
-uses a different, narrower camera band: distance in \([0.65,0.95]\) m, height
-offset in \([0.15,0.45]\) m, 0.05 m target jitter, and a visibility filter that
-requires a \(0.40{\times}0.40{\times}0.20\) m workspace box to project inside
-the image with an 8-pixel margin.  Both distributions render \(128{\times}128\)
-RGB images.  At rollout time we evaluate each checkpoint under both
-\texttt{train\_wide} and \texttt{eval\_tight}, 40 rollouts per cell, with the
-same seed base and 8-step action execution interval.
+During training, input cameras are sampled from the \texttt{train\_wide}
+distribution illustrated in Fig.~\ref{fig:overview}.  We launch rollout
+evaluation every 50k optimization steps on two camera settings: the same
+\texttt{train\_wide} distribution used for training, and a different, tighter
+held-out distribution, \texttt{eval\_tight}.  Each evaluation uses 40 rollouts
+per camera setting.  This separates in-distribution policy learning from
+camera-distribution transfer.
 
 \paragraph{Methods and inputs.}
-Diffusion Policy is the image-only baseline: it receives RGB observations and
-proprioception but no explicit 3D or camera-pose input.  ManiFlow is the
-point-cloud baseline and is the only method in Fig.~\ref{fig:mimicgen-prelim}
-that consumes point clouds.  The E2E camera-pose action policy receives RGB,
-predicts camera poses internally, converts them into Plucker ray maps, and
-trains with action and semi-supervised pose losses.  In the current MimicGen
-configuration it uses two surround cameras plus the wrist camera, 50\%
-episode-level pose labels, teacher forcing during pose warmup, and predicted
-poses afterward.  The E2E camera-pose NVS policy uses the same pose-label ratio
-and adds the scene-token NVS branch.  Its current register-token configuration
-keeps 64 active scene tokens, samples one target input view for reconstruction,
-and drops the target observation from the encoder with probability 0.6 by
-zeroing both RGB and Plucker channels.  The NVS decoder is used only during
-training.
+We compare against Diffusion Policy~\citep{chi2023diffusionpolicy} as the image
+baseline and ManiFlow~\citep{yan2025maniflow} as the point-cloud baseline.  We
+follow the original hyperparameters as closely as possible for both baselines;
+for ManiFlow, we use 1024 points to provide a higher-resolution point-cloud
+input.  The two proposed methods are the E2E camera-pose action policy and the
+E2E camera-pose NVS policy described in the Method section and
+Fig.~\ref{fig:pipeline}; implementation hyperparameters are deferred to the
+appendix.
 
 \paragraph{Results.}
-Fig.~\ref{fig:mimicgen-prelim} reports the current multi-task result set.  Hammer
-Cleanup is omitted because this round focuses on the four completed tasks.  The
+Fig.~\ref{fig:mimicgen-prelim} reports the current four-task result set.  The
 final group reports a macro-average over the displayed tasks.  The NVS policy
 improves over the E2E camera-pose action policy by 13.1 percentage points on
 train-camera evaluation and 23.1 points under tight-camera evaluation.  On
