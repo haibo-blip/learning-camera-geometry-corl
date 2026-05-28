@@ -64,6 +64,33 @@ example per MimicGen task.  Each strip contains the remaining source view, the
 ground-truth target view, and the predicted target view, after removing the
 duplicated target input from the raw W\&B visualization.
 
+To confirm the NVS branch learns a non-trivial scene representation rather than
+copying an input view, Table~\ref{tab:appendix-nvs-floor} compares its
+reconstructions against a copy-source-view floor (the non-target input view used
+directly as the prediction) on the Stack validation splits.  The decoder
+improves over the floor on both PSNR and LPIPS under the train-camera and the
+tighter held-out camera distribution, so the scene tokens carry view-synthesis
+information beyond the nearest available input.
+
+\begin{table}[ht]
+  \centering
+  \caption{NVS reconstruction quality vs.\ a copy-source-view floor on the Stack
+  validation splits (train-camera and tight-camera). Metrics are computed from
+  the val NVS visualization panels; the source tile duplicating the target is
+  excluded.}
+  \label{tab:appendix-nvs-floor}
+  \begin{tabular}{lcccc}
+    \toprule
+    Method & \multicolumn{2}{c}{train-camera} & \multicolumn{2}{c}{tight-camera} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+           & PSNR\,$\uparrow$ & LPIPS\,$\downarrow$ & PSNR\,$\uparrow$ & LPIPS\,$\downarrow$ \\
+    \midrule
+    Copy source view    & 9.05  & 0.602 & 12.76 & 0.369 \\
+    Ours (NVS decoder)  & \textbf{16.17} & \textbf{0.366} & \textbf{14.98} & \textbf{0.257} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \begin{figure}[ht]
   \centering
   \setlength{\tabcolsep}{3pt}
