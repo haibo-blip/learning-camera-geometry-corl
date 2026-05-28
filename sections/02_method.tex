@@ -1,4 +1,4 @@
-Our goal is to train an RGB policy that can use camera geometry without requiring calibrated camera poses at test time.  The central design is to make camera pose an internal latent variable: a pose predictor estimates the camera-to-world transform of each input view, the estimated transforms are converted into per-pixel ray features, and the downstream policy is trained end-to-end through these geometric features.  We instantiate this idea in two variants.  The first variant trains an action policy directly from predicted camera geometry.  The second variant adds a register-token novel-view synthesis objective that encourages the observation representation to preserve 3D scene structure.
+Our goal is to train an RGB policy that can use camera geometry without requiring calibrated camera poses at test time.  The central design is to make camera pose an internal latent variable: a pose predictor estimates the camera-to-world transform of each input view, the estimated transforms are converted into per-pixel ray features, and the downstream policy is trained end-to-end through these geometric features.  We instantiate this idea in two variants.  The first variant trains an action policy directly from predicted camera geometry.  The second variant adds a scene-token novel-view synthesis objective that encourages the observation representation to preserve 3D scene structure.
 
 \subsection{Problem Setup}
 
@@ -99,33 +99,35 @@ action chunk from the action decoder.
 \subsection{E2E Camera-Pose NVS Policy}
 
 The second variant adds an explicit 3D representation pressure through
-register-token novel-view synthesis.  This model uses a separate observation
+scene-token novel-view synthesis.  This model uses a separate observation
 encoder from the action-only variant.  The encoder maps source views and their
-predicted ray features into a fixed set of scene registers:
+predicted ray features into a fixed set of latent scene tokens:
 \begin{equation}
 R_t = F_\theta\left(\{I_{t,i},P_{t,i}\}_{i=1}^{N}\right),
 \qquad R_t\in\mathbb{R}^{M\times D}.
 \end{equation}
-Concretely, the encoder appends learned active register tokens~\citep{darcet2024registers} to the
+This follows the set-latent scene representation used in view-synthesis
+transformers~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.  In our
+implementation, the encoder appends learned active scene tokens to the
 multi-view patch sequence.  After transformer self-attention, the view patch
-tokens are discarded and only the active registers are retained.  The NVS
-branch therefore decodes from a register bottleneck rather than directly from
-the full source patch sequence.  In the current implementation \(M=64\) active
-registers.  The action expert uses these registers together with proprioception
-and task conditioning:
+tokens are discarded and only the active scene tokens are retained.  The NVS
+branch therefore decodes from a latent scene-token bottleneck rather than
+directly from the full source patch sequence.  In the current implementation
+\(M=64\) active scene tokens.  The action expert uses these tokens together
+with proprioception and task conditioning:
 \begin{equation}
-z_t^{\text{reg}} = \text{concat}(R_t, q_t, c), \qquad
+z_t^{\text{scene}} = \text{concat}(R_t, q_t, c), \qquad
 \mathcal{L}_{\text{act}} =
-\mathcal{L}_{\text{flow}}(g_\psi, z_t^{\text{reg}}, A_t).
+\mathcal{L}_{\text{flow}}(g_\psi, z_t^{\text{scene}}, A_t).
 \end{equation}
 
 For the NVS objective, we randomly select a target camera \(j\) and provide the
 decoder with the target pose and intrinsics through target-view Plucker rays.
 To prevent trivial copying, the target view's encoder input is masked with
 probability \(p_{\text{drop}}\), so the decoder must reconstruct the target
-image from the remaining scene evidence stored in the registers.  The NVS
+image from the remaining scene evidence stored in the scene tokens.  The NVS
 decoder \(D_\omega\) patchifies the target-view ray map, uses those target-ray
-tokens as queries, and cross-attends only to the retained scene registers:
+tokens as queries, and cross-attends only to the retained scene tokens:
 \begin{equation}
 \hat{I}_{t,j} =
 D_\omega\left(R_t, P_{t,j}\right).
@@ -136,7 +138,7 @@ We train it with a pixel and perceptual reconstruction loss:
 \|\hat{I}_{t,j}-I_{t,j}\|_2^2
 +\beta\,\text{LPIPS}(\hat{I}_{t,j}, I_{t,j}).
 \end{equation}
-This objective forces the registers to encode object layout, occlusion, and
+This objective forces the scene tokens to encode object layout, occlusion, and
 camera geometry rather than only action-correlated image features.  The complete
 training objective is
 \begin{equation}
@@ -147,7 +149,7 @@ training objective is
 \end{equation}
 
 The NVS decoder is used only during training.  At inference, the policy keeps
-the pose head, register observation encoder, and action expert, but it discards
+the pose head, scene-token observation encoder, and action expert, but it discards
 the reconstruction head.  This preserves the end-to-end action policy interface:
 the robot receives only RGB, proprioception, and task conditioning, while camera
 geometry is inferred internally.

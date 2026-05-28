@@ -27,7 +27,7 @@ The LIBERO-MV Spatial experiment isolates end-to-end camera-pose learning. The c
 
 \subsection{MimicGen camera-shift evaluation}
 
-The MimicGen experiment evaluates train-camera and tight-camera success rates. The current result table contains four partially complete tasks, with Hammer Cleanup still pending. Each cell reports train-set camera success followed by tight-set camera success. The current results suggest that register-token NVS improves over the action-only RayZer variant on Stack Three, Coffee, and Threading, while ManiFlow remains a strong point-cloud baseline on Stack.
+The MimicGen experiment evaluates train-camera and tight-camera success rates. The current result table contains four partially complete tasks, with Hammer Cleanup still pending. Each cell reports train-set camera success followed by tight-set camera success. The current results suggest that scene-token NVS improves over the action-only RayZer variant on Stack Three, Coffee, and Threading, while ManiFlow remains a strong point-cloud baseline on Stack.
 
 \begin{table}[h]
   \centering
@@ -41,7 +41,7 @@ The MimicGen experiment evaluates train-camera and tight-camera success rates. T
     Diffusion Policy & Image & 0.15 / 0.00 & 0.00 / 0.00 & 0.00 / 0.00 & 0.95 / 0.025 & -- \\
     ManiFlow & Point cloud & 0.275 / 0.275 & 0.10 / 0.225 & 0.025 / 0.05 & 0.975 / 0.725 & -- \\
     RayZer/action-only & Image & 0.30 / 0.00 & 0.025 / 0.00 & 0.05 / 0.00 & 0.975 / 0.025 & -- \\
-    RayZer + register NVS & Image & 0.55 / 0.25 & 0.20 / 0.175 & 0.15 / 0.10 & -- & -- \\
+    RayZer + scene-token NVS & Image & 0.55 / 0.25 & 0.20 / 0.175 & 0.15 / 0.10 & -- & -- \\
     \bottomrule
   \end{tabular}
   }
@@ -91,4 +91,4 @@ finalized.
 
 \subsection{Planned baselines and ablations}
 
-The main MimicGen table should compare image Diffusion Policy, ManiFlow or another point-cloud baseline, the E2E camera-pose action policy, and the E2E camera-pose NVS policy. Ablations should separate the effect of joint pose learning, pose-label ratio, NVS regularization, and register-token versus PRoPE-style NVS.
+The main MimicGen table should compare image Diffusion Policy, ManiFlow or another point-cloud baseline, the E2E camera-pose action policy, and the E2E camera-pose NVS policy. Ablations should separate the effect of joint pose learning, pose-label ratio, NVS regularization, and scene-token versus PRoPE-style NVS.
