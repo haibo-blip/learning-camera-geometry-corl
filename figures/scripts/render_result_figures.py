@@ -152,15 +152,25 @@ def render_mimicgen() -> None:
             for bi, (b, v) in enumerate(zip(bars, vals)):
                 if np.isnan(v):
                     continue
-                if v >= 8:
-                    if v >= 90 or bi == len(vals) - 1:
-                        ax.text(b.get_x() + b.get_width() / 2, v + 1.2, fmt_pct(v), ha="center", va="bottom", fontsize=8.5, rotation=90)
-                    else:
-                        ax.text(b.get_x() + b.get_width() / 2, v + 1.6, fmt_pct(v), ha="center", va="bottom", fontsize=9)
+                is_mean = bi == len(vals) - 1
+                label_x = b.get_x() + b.get_width() / 2
+                label_y = max(v + 1.3, 2.0)
+                rotate = v < 8 or v >= 90 or is_mean
+                ax.text(
+                    label_x,
+                    label_y,
+                    fmt_pct(v),
+                    ha="center",
+                    va="bottom",
+                    fontsize=8.2 if rotate else 8.8,
+                    rotation=90 if rotate else 0,
+                    color=COLORS["text"],
+                    clip_on=False,
+                )
         ax.set_title(title, pad=10)
         ax.set_xticks(x)
         ax.set_xticklabels(plot_labels, rotation=16, ha="right")
-        ax.set_ylim(0, 112)
+        ax.set_ylim(0, 116)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.grid(axis="y")
         ax.grid(axis="x", visible=False)
