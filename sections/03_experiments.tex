@@ -54,6 +54,41 @@ The MimicGen experiment evaluates train-camera and tight-camera success rates. T
   \label{fig:mimicgen-prelim}
 \end{figure}
 
+\subsection{Real-world tabletop evaluation}
+
+We are also beginning a real-world tabletop evaluation to test whether the same
+camera-aware policy interface transfers beyond simulation.  The protocol follows
+the camera-conditioned real-robot setting of
+\citet{jiang2025knowyourcamera}: a single-arm tabletop robot observes the scene
+from wrist and external RGB cameras, the scene is reset between on-robot
+rollouts, and success is scored at the episode level.  Our difference is that
+camera geometry is not supplied as calibrated metadata at inference.  The robot
+receives RGB observations and proprioception, predicts camera geometry
+internally, constructs Plucker ray features, and executes the action expert
+without ground-truth camera poses.
+
+The first completed task is Blocks in Bowl.  The robot must pick a block and
+place it inside the bowl from the tabletop camera views.  The current
+end-to-end camera-pose NVS policy succeeds on all evaluation trials completed
+so far, giving a preliminary success rate of \(1.00\).  We keep this result
+separate from the simulation tables because the remaining real-world tasks,
+trial count denominator, and camera-perturbation ranges are still being
+finalized.
+
+\begin{table}[h]
+  \centering
+  \caption{Initial real-world tabletop result. The trial count will be added
+  after the run log is finalized.}
+  \label{tab:realworld-prelim}
+  \begin{tabular}{l c c c}
+    \toprule
+    Task & Policy & Success rate & Trial count \\
+    \midrule
+    Blocks in Bowl & E2E Camera-Pose NVS Policy & 1.00 & pending log \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \subsection{Planned baselines and ablations}
 
 The main MimicGen table should compare image Diffusion Policy, ManiFlow or another point-cloud baseline, the E2E camera-pose action policy, and the E2E camera-pose NVS policy. Ablations should separate the effect of joint pose learning, pose-label ratio, NVS regularization, and register-token versus PRoPE-style NVS.

@@ -45,11 +45,19 @@ receives action and, when enabled, NVS gradients.
 The estimated pose is then turned into dense camera geometry.  For each pixel
 coordinate \(u\), intrinsics \(K_i\) and pose \(\hat{T}_{t,i}\) define a ray
 origin \(o_{t,i}(u)\) and direction \(d_{t,i}(u)\).  We encode these rays as a
-six-channel Plucker-style map
+six-channel Plucker ray map~\citep{plucker1865newgeometry,sitzmann2021lfn}
 \begin{equation}
 P_{t,i}(u)=\left[o_{t,i}(u)\times d_{t,i}(u),\ d_{t,i}(u)\right].
 \end{equation}
-The visual encoder receives RGB together with \(P_{t,i}\).  Because ray
+This token-level camera encoding follows the ray-map conditioning used in
+recent view-synthesis transformers, where pixel-aligned rays provide the model
+with camera geometry at the image-token level~\citep{jin2024lvsm,jiang2025rayzer}.
+In robot learning, calibrated Plucker camera maps have been used to condition
+RGB policies for viewpoint generalization~\citep{jiang2025knowyourcamera}.
+Attention-level alternatives such as GTA and PRoPE instead inject relative
+camera geometry inside self-attention~\citep{miyato2024gta,li2025prope}.  Our
+main policy variants use the explicit Plucker form because it gives a direct
+differentiable path from predicted pose to every visual token.  Because ray
 construction is differentiable with respect to \(\hat{T}_{t,i}\), downstream
 losses can update the pose head even when an image comes from an episode with
 no camera-pose annotation.
@@ -98,7 +106,7 @@ predicted ray features into a fixed set of scene registers:
 R_t = F_\theta\left(\{I_{t,i},P_{t,i}\}_{i=1}^{N}\right),
 \qquad R_t\in\mathbb{R}^{M\times D}.
 \end{equation}
-Concretely, the encoder appends learned active register tokens to the
+Concretely, the encoder appends learned active register tokens~\citep{darcet2024registers} to the
 multi-view patch sequence.  After transformer self-attention, the view patch
 tokens are discarded and only the active registers are retained.  The NVS
 branch therefore decodes from a register bottleneck rather than directly from
