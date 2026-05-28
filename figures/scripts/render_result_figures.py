@@ -55,6 +55,10 @@ def save(fig: plt.Figure, name: str) -> None:
     plt.close(fig)
 
 
+def fmt_pct(value: float) -> str:
+    return f"{value:.0f}" if abs(value - round(value)) < 1e-6 else f"{value:.1f}"
+
+
 def render_libero() -> None:
     rows = read_csv("libero_mv_spatial.csv")
     baselines = [r for r in rows if r["plot"] == "baseline"]
@@ -143,13 +147,14 @@ def render_mimicgen() -> None:
                 if np.isnan(v):
                     continue
                 if v >= 8:
-                    ax.text(b.get_x() + b.get_width() / 2, v + 1.6, f"{v:.0f}", ha="center", va="bottom", fontsize=9)
-            if np.isnan(vals[-1]) and metric == "train_success":
-                ax.text(x[-1] + offsets[mi], 4, "pending", ha="center", va="bottom", fontsize=9, rotation=90, color=color)
+                    if v >= 90:
+                        ax.text(b.get_x() + b.get_width() / 2, v + 1.2, fmt_pct(v), ha="center", va="bottom", fontsize=8.5, rotation=90)
+                    else:
+                        ax.text(b.get_x() + b.get_width() / 2, v + 1.6, fmt_pct(v), ha="center", va="bottom", fontsize=9)
         ax.set_title(title, pad=10)
         ax.set_xticks(x)
         ax.set_xticklabels(tasks, rotation=16, ha="right")
-        ax.set_ylim(0, 105)
+        ax.set_ylim(0, 112)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.grid(axis="y")
         ax.grid(axis="x", visible=False)

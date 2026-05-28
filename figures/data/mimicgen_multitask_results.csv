@@ -14,4 +14,4 @@ E2E camera-pose action policy,Image,Stack,0.975,0.025
 E2E camera-pose NVS policy,Image,Stack Three,0.550,0.250
 E2E camera-pose NVS policy,Image,Coffee,0.200,0.175
 E2E camera-pose NVS policy,Image,Threading,0.150,0.100
-E2E camera-pose NVS policy,Image,Stack,,
+E2E camera-pose NVS policy,Image,Stack,0.975,0.425
