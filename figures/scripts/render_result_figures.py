@@ -120,30 +120,52 @@ def render_mimicgen() -> None:
     tasks = ["Stack Three", "Coffee", "Threading", "Stack"]
     plot_labels = tasks + ["Mean"]
     methods = [
-        ("Diffusion Policy", "Diffusion Policy\n(image)", COLORS["image"]),
-        ("ManiFlow", "ManiFlow\n(point cloud)", COLORS["geometry"]),
-        ("E2E camera-pose action policy", "E2E camera-pose\naction policy", COLORS["action"]),
-        ("E2E camera-pose NVS policy", "E2E camera-pose\nNVS policy", COLORS["nvs"]),
+        ("Diffusion Policy", "Diffusion Policy\n(image)", COLORS["image"], None),
+        ("E2E camera-pose action policy", "E2E camera-pose\naction policy", COLORS["action"], None),
+        ("E2E camera-pose NVS policy", "E2E camera-pose\nNVS policy", COLORS["nvs"], None),
+        ("ManiFlow", "ManiFlow\n(point cloud +\nGT extrinsics)", COLORS["geometry"], "////"),
     ]
     by_key = {(r["method"], r["task"]): r for r in rows}
 
     fig, axes = plt.subplots(1, 2, figsize=(11.6, 4.25), sharey=True)
     fig.patch.set_facecolor("white")
-    width = 0.17
+    width = 0.16
     x = np.concatenate([np.arange(len(tasks)), np.array([len(tasks) + 0.72])])
-    offsets = np.linspace(-1.5 * width, 1.5 * width, len(methods))
+    offsets = np.array([-1.75, -0.65, 0.45, 1.95]) * width
 
     for ax, metric in zip(axes, ["train_success", "tight_success"]):
         ax.axvspan(x[-1] - 0.52, x[-1] + 0.52, color="#F3F6FA", zorder=0)
         ax.axvline((x[-2] + x[-1]) / 2, color=COLORS["grid"], linestyle="--", linewidth=1.4, zorder=1)
-        for mi, (method, label, color) in enumerate(methods):
+        ax.text(
+            0.02,
+            0.965,
+            "hatched ManiFlow = GT extrinsics",
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=9.2,
+            color=COLORS["geometry"],
+            fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor=COLORS["geometry"], linewidth=1.0, alpha=0.94),
+        )
+        for mi, (method, label, color, hatch) in enumerate(methods):
             task_vals = []
             for task in tasks:
                 raw = by_key[(method, task)][metric]
                 task_vals.append(float(raw) * 100 if raw else np.nan)
             vals = task_vals + [float(np.nanmean(task_vals))]
             xpos = x + offsets[mi]
-            bars = ax.bar(xpos, vals, width=width, label=label, color=color, alpha=0.88)
+            bars = ax.bar(
+                xpos,
+                vals,
+                width=width,
+                label=label,
+                color=color,
+                alpha=0.88 if hatch is None else 0.76,
+                edgecolor="white" if hatch is None else COLORS["text"],
+                linewidth=0.5 if hatch is None else 1.1,
+                hatch=hatch,
+            )
             bars[-1].set_edgecolor(COLORS["text"])
             bars[-1].set_linewidth(0.8)
             for bi, (b, v) in enumerate(zip(bars, vals)):
@@ -173,7 +195,7 @@ def render_mimicgen() -> None:
 
     axes[0].set_ylabel("Episode success rate (%)")
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 1.08), fontsize=10.5, columnspacing=1.2, handlelength=1.6)
+    fig.legend(handles, labels, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 1.11), fontsize=9.8, columnspacing=1.1, handlelength=1.6)
     fig.tight_layout(w_pad=2.4)
     save(fig, "mimicgen_multitask_results")
 

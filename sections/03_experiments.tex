@@ -63,8 +63,9 @@ a held-out \texttt{eval\_tight} distribution illustrated in \autoref{fig:overvie
 Each camera setting uses 40 rollouts per evaluation checkpoint, and checkpoint
 selection is based on validation rollout success.  We compare to Diffusion
 Policy~\citep{chi2023diffusionpolicy} as an image baseline and
-ManiFlow~\citep{yan2025maniflow} as a point-cloud baseline; split, camera,
-and hyperparameter details are in \autoref{sec:appendix-mimicgen-protocol}, and
+ManiFlow~\citep{yan2025maniflow} as a point-cloud baseline.  ManiFlow uses
+ground-truth camera extrinsics to construct its point-cloud input; split,
+camera, and hyperparameter details are in \autoref{sec:appendix-mimicgen-protocol}, and
 checkpoint selection is described in
 \autoref{sec:appendix-checkpoint-selection}.
 
@@ -86,8 +87,9 @@ point-cloud methods in every shifted-camera regime.
   \caption{MimicGen results. Left and right panels report episode-level success
   rates under the train-camera and tight-camera camera distributions; the shaded
   Mean group is the macro-average over the four displayed tasks. Diffusion Policy
-  is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E
-  variants match the model names in \autoref{fig:pipeline}.}
+  is an image baseline, hatched ManiFlow bars denote the point-cloud baseline
+  with access to ground-truth camera extrinsics, and the two E2E variants match
+  the model names in \autoref{fig:pipeline}.}
   \label{fig:mimicgen-results}
 \end{figure}
 
