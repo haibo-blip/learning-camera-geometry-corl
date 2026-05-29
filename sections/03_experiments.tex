@@ -81,7 +81,11 @@ point-cloud methods in every shifted-camera regime.
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/mimicgen_multitask_results.png}
-  \caption{MimicGen results. Bars report episode-level success rates under the train-camera and tight-camera camera distributions; the shaded Mean group is the macro-average over the four displayed tasks. Diffusion Policy is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E variants match the model names in Fig.~\ref{fig:pipeline}.}
+  \caption{MimicGen results. Left and right panels report episode-level success
+  rates under the train-camera and tight-camera camera distributions; the shaded
+  Mean group is the macro-average over the four displayed tasks. Diffusion Policy
+  is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E
+  variants match the model names in Fig.~\ref{fig:pipeline}.}
   \label{fig:mimicgen-results}
 \end{figure}
 
@@ -139,10 +143,3 @@ Blocks-in-Bowl and the calibrated reference remains saturated on Cup Stacking.
     \bottomrule
   \end{tabular}
 \end{table}
-
-\paragraph{Scope.}
-These are controlled point comparisons on a fixed real-robot task set with
-small per-task trial counts, not a broad real-world generalization claim.  The
-takeaway is specific: under a weaker geometric-supervision budget and no
-inference-time calibration, the learned-geometry policy matches or exceeds a
-calibrated geometry-aware reference on the same hardware and rubric.

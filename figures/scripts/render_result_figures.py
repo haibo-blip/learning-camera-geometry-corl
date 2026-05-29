@@ -87,7 +87,6 @@ def render_libero() -> None:
     ax0.invert_yaxis()
     ax0.set_xlim(50, 90)
     ax0.set_xlabel("Spatial success (%)")
-    ax0.set_title("Spatial comparison", pad=12)
     ax0.grid(axis="x")
     ax0.grid(axis="y", visible=False)
 
@@ -112,10 +111,8 @@ def render_libero() -> None:
     ax1.set_yticks([75, 80, 85, 90])
     ax1.set_xlabel("GT pose labels used in training (%)")
     ax1.set_ylabel("Average success (%)")
-    ax1.set_title("Pose-label ratio sweep", pad=12)
     ax1.grid(True)
 
-    fig.suptitle("LIBERO-MV Spatial: E2E camera-pose action policy", fontsize=21, y=1.03, color=COLORS["text"])
     fig.tight_layout(w_pad=3.0)
     save(fig, "libero_mv_spatial_summary")
 
@@ -138,7 +135,7 @@ def render_mimicgen() -> None:
     x = np.concatenate([np.arange(len(tasks)), np.array([len(tasks) + 0.72])])
     offsets = np.linspace(-1.5 * width, 1.5 * width, len(methods))
 
-    for ax, metric, title in zip(axes, ["train_success", "tight_success"], ["Train-camera evaluation", "Tight-camera evaluation"]):
+    for ax, metric in zip(axes, ["train_success", "tight_success"]):
         ax.axvspan(x[-1] - 0.52, x[-1] + 0.52, color="#F3F6FA", zorder=0)
         ax.axvline((x[-2] + x[-1]) / 2, color=COLORS["grid"], linestyle="--", linewidth=1.4, zorder=1)
         for mi, (method, label, color) in enumerate(methods):
@@ -169,7 +166,6 @@ def render_mimicgen() -> None:
                     color=COLORS["text"],
                     clip_on=False,
                 )
-        ax.set_title(title, pad=10)
         ax.set_xticks(x)
         ax.set_xticklabels(plot_labels, rotation=16, ha="right")
         ax.set_ylim(0, 116)
@@ -180,7 +176,6 @@ def render_mimicgen() -> None:
     axes[0].set_ylabel("Episode success rate (%)")
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 1.08), fontsize=10.5, columnspacing=1.2, handlelength=1.6)
-    fig.suptitle("MimicGen 100-demo camera-shift evaluation", fontsize=21, y=1.22, color=COLORS["text"])
     fig.tight_layout(w_pad=2.4)
     save(fig, "mimicgen_multitask_results")
 
