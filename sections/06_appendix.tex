@@ -60,10 +60,10 @@ ManiFlow uses 1024 point-cloud points.
 \paragraph{Checkpoint selection and reporting.}
 For MimicGen, each saved evaluation point runs rollouts on the training camera
 distribution and on the tighter held-out camera distribution.  The paper reports
-the checkpoint with the best validation rollout success observed before the run
-finished or was stopped.  Reported train-camera and tight-camera success rates
-come from the same selected checkpoint, rather than from separately selecting a
-best checkpoint for each camera setting.
+the checkpoint with the highest validation rollout success over the full
+training run's scheduled validation evaluations.  Reported train-camera and
+tight-camera success rates come from the same selected checkpoint, rather than
+from separately selecting a best checkpoint for each camera setting.
 
 \paragraph{Real-World Tabletop.}
 The real-world E2E camera-pose NVS policy uses 50\% episode-level pose labels
@@ -109,14 +109,16 @@ success.  Each error is averaged over the last logged evaluation points.  Pose
 error falls monotonically with more labels and is lowest for the fully-labeled
 coupled run; the decoupled head is more accurate than every partially-labeled
 coupled run, but task success is essentially flat across the coupled runs and
-lowest for the decoupled head --- metric pose accuracy does not track control
-performance.
+lowest for the decoupled head.  This is consistent with the deployment-shift
+view: the decoupled policy is trained on calibrated rays, but deployed with a
+pose head's predicted rays.
 
 \begin{table}[ht]
   \centering
   \caption{Converged pose accuracy and Spatial success vs.\ pose-label ratio on
   LIBERO-MV. The decoupled supervised-only pose head is more accurate than the
-  partially-labeled coupled runs yet yields the lowest success.}
+  partially-labeled coupled runs yet yields the lowest success under
+  predicted-pose deployment.}
   \label{tab:appendix-pose-sweep}
   \begin{tabular}{lccc}
     \toprule

@@ -58,38 +58,35 @@ geometry used by a fixed encoder.
 A natural alternative is to learn camera geometry \emph{outside} the control
 objective: train a pose head in isolation by supervised regression of the
 calibrated extrinsics, then plug its predictions into a frozen geometry-trained
-policy with no joint optimization.  This policy is trained on ground-truth poses
-and only sees the head's predictions at deployment, so it also incurs a
-train-test pose-distribution shift --- which, as we discuss below, is precisely
-what end-to-end coupling removes.  Under the identical LIBERO-MV Spatial
-protocol, this decoupled two-stage variant (the predicted-pose deployment of the
-calibrated Plucker policy) reaches \(0.660\) success using \emph{full} pose
-supervision, whereas our coupled E2E camera-pose action policy reaches
-\(0.865\) using pose labels for only \(50\%\) of episodes --- a \(20.5\)-point
-gain at half the label budget.  Notably, the decoupled pose head is
-\emph{metrically far more accurate} --- \(0.33^\circ\) rotation error versus
-\(2.42^\circ\) for the coupled 50\% run --- yet yields the weaker policy
+policy with no joint optimization.  This setting tests whether a supervised pose
+head can serve as a drop-in replacement for calibrated extrinsics at deployment.
+It is not a fully controlled isolation of joint optimization, because the frozen
+policy is trained on ground-truth poses and only sees the head's predictions at
+deployment.  Under the identical LIBERO-MV Spatial protocol, this decoupled
+two-stage variant (the predicted-pose deployment of the calibrated Plucker
+policy) reaches \(0.660\) success using \emph{full} pose supervision, whereas
+our coupled E2E camera-pose action policy reaches \(0.865\) using pose labels
+for only \(50\%\) of episodes --- a \(20.5\)-point gain at half the label
+budget.  Notably, the decoupled pose head is \emph{metrically far more
+accurate} --- \(0.33^\circ\) rotation error versus \(2.42^\circ\) for the
+coupled 50\% run --- yet yields the weaker deployment result
 (Table~\ref{tab:pose-dissociation}).  The same pattern holds across the label
 sweep (Table~\ref{tab:appendix-pose-sweep}): driving the coupled pose head from
 \(7.6^\circ\) error at 10\% labels down to \(0.16^\circ\) at 100\% --- a roughly
-\(48\times\) reduction --- moves Spatial success by under five points, and the
-decoupled head, more accurate than every partially-labeled coupled run, still
-gives the lowest success of all.  The sweep evidence is confound-free: each
-coupled run is both trained and evaluated on its own predicted poses, so the
-flat success despite a \(48\times\) error change isolates the effect cleanly.
-The mechanism the two results point to is consistency rather than accuracy:
-end-to-end coupling trains the policy on the same predicted geometry it uses at
-test, so it tolerates a less metrically accurate but in-distribution pose,
-whereas a decoupled policy trained on ground-truth poses is sensitive to the
-predicted-pose shift even when those predictions are more accurate.  What helps
-control is therefore geometry that is shaped by --- and consistent with --- the
-control objective, not a metrically optimal pose.
+\(48\times\) reduction --- moves Spatial success by under five points.  We
+interpret this as a deployment-consistency result.  The frozen Plucker policy is
+trained on ground-truth rays and evaluated with predicted rays, while the coupled
+policy is trained and evaluated on its own predicted geometry.  Thus, a low-error
+pose head is not automatically a drop-in substitute for calibrated geometry; the
+policy also depends on whether the geometry distribution used at test matches
+the one it saw during training.
 
 \begin{table}[t]
   \centering
-  \caption{Metric pose accuracy does not predict control. The decoupled
-  (supervised-only) pose head has roughly 7$\times$ lower rotation error than
-  the coupled 50\% run, yet produces the weaker policy on LIBERO-MV Spatial.
+  \caption{Decoupled predicted-pose deployment on LIBERO-MV Spatial. The
+  supervised-only pose head has roughly 7$\times$ lower rotation error than the
+  coupled 50\% run, yet the frozen Plucker policy loses performance when its
+  calibrated training geometry is replaced by predicted geometry at deployment.
   Coupled E2E is the 50\% label-ratio run; per-ratio pose accuracy is in
   Table~\ref{tab:appendix-pose-sweep}.}
   \label{tab:pose-dissociation}
@@ -127,10 +124,11 @@ narrower angular spread clustered closer to a frontal band rather than the full
 upper hemisphere (Fig.~\ref{fig:overview}), so the policy must transfer to
 viewpoints outside the training distribution.  Each evaluation uses 40 rollouts
 per camera setting.  This separates in-distribution policy learning from
-camera-distribution transfer.  Checkpoint selection is validation-based: for
-each run, we select the best validation checkpoint available before training
-finishes or is stopped, and report the corresponding train-camera and
-tight-camera rollout success at that checkpoint.
+camera-distribution transfer.  After training completes, checkpoint selection is
+validation-based: for each run, we select the checkpoint with the highest
+validation rollout success over the scheduled validation evaluations, and report
+the corresponding train-camera and tight-camera rollout success at that
+checkpoint.
 
 \paragraph{Methods and inputs.}
 We compare against Diffusion Policy~\citep{chi2023diffusionpolicy} as the image

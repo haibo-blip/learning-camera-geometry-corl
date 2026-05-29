@@ -54,8 +54,10 @@ the fraction of episodes with ground-truth camera-pose labels and find that
 partial supervision is sufficient for strong control: with labels on only half
 of the episodes the coupled policy outperforms a fully-supervised decoupled
 pose-then-policy variant by over 20 points, even though that decoupled pose head
-is markedly more accurate metrically --- metric pose accuracy does not predict
-control utility.  On MimicGen
+is markedly more accurate metrically.  This comparison highlights a
+deployment-consistency issue: a frozen policy trained on ground-truth geometry
+can be sensitive to replacing that geometry with predicted poses at deployment.
+On MimicGen
 tasks~\citep{mandlekar2023mimicgen}, we compare image, point-cloud, and
 end-to-end camera-pose policies under both train-camera and tight-camera
 evaluation.  Averaged across the four MimicGen tasks, the NVS variant
@@ -74,10 +76,10 @@ contribute action and representation-learning gradients.  Second, we present two
 camera-aware policy variants, one trained only with action and pose losses and
 one regularized by scene-token novel-view synthesis.  Third, we evaluate these
 policies on LIBERO-MV, MimicGen, and a real-world tabletop suite, and show that
-coupling geometry to the control objective beats a decoupled, more metrically
-accurate pose-then-policy pipeline: task-useful camera geometry can be learned
-inside the policy objective while reducing reliance on fixed calibrated metadata
-at inference.
+coupling geometry to the control objective improves over decoupled predicted-pose
+deployment, even when the decoupled pose head has lower metric error:
+task-useful camera geometry can be learned inside the policy objective while
+reducing reliance on fixed calibrated metadata at inference.
 
 \begin{figure}[t]
   \centering
