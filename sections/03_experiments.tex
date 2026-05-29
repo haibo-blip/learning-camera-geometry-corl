@@ -61,30 +61,30 @@ calibrated Plucker policy) reaches \(0.660\) success using \emph{full} pose
 supervision, whereas our coupled E2E camera-pose action policy reaches
 \(0.865\) using pose labels for only \(50\%\) of episodes --- a \(20.5\)-point
 gain at half the label budget.  Notably, the decoupled pose head is
-\emph{metrically far more accurate} --- \(0.16^\circ\) rotation error versus
+\emph{metrically far more accurate} --- \(0.33^\circ\) rotation error versus
 \(2.42^\circ\) for the coupled 50\% run --- yet yields the weaker policy
 (Table~\ref{tab:pose-dissociation}).  The same pattern holds across the label
 sweep (Table~\ref{tab:appendix-pose-sweep}): driving the coupled pose head from
-\(7.6^\circ\) error at 10\% labels down to \(0.33^\circ\) at 100\% --- a
-\(23\times\) reduction --- moves Spatial success by under five points, and the
-single most accurate pose head of all (the decoupled \(0.16^\circ\)) gives the
-lowest success.  This dissociation is the central evidence for our claim: what
-helps control is not a metrically optimal pose, but geometry shaped by the
-control objective itself.
+\(7.6^\circ\) error at 10\% labels down to \(0.16^\circ\) at 100\% --- a roughly
+\(48\times\) reduction --- moves Spatial success by under five points, and the
+decoupled head, more accurate than every partially-labeled coupled run, still
+gives the lowest success of all.  This dissociation is the central evidence for
+our claim: what helps control is not a metrically optimal pose, but geometry
+shaped by the control objective itself.
 
 \begin{table}[t]
   \centering
   \caption{Metric pose accuracy does not predict control. The decoupled
-  (supervised-only) pose head is over an order of magnitude more accurate in
-  rotation, yet produces the weaker policy on LIBERO-MV Spatial. Coupled E2E is
-  the 50\% label-ratio run; per-ratio pose accuracy is in
+  (supervised-only) pose head has roughly 7$\times$ lower rotation error than
+  the coupled 50\% run, yet produces the weaker policy on LIBERO-MV Spatial.
+  Coupled E2E is the 50\% label-ratio run; per-ratio pose accuracy is in
   Table~\ref{tab:appendix-pose-sweep}.}
   \label{tab:pose-dissociation}
   \begin{tabular}{lccc}
     \toprule
     Variant & Rot. err.\ (deg)\,$\downarrow$ & Trans. err.\ (m)\,$\downarrow$ & Spatial success\,$\uparrow$ \\
     \midrule
-    Decoupled (supervised pose, frozen policy) & \textbf{0.159} & \textbf{0.0040} & 0.660 \\
+    Decoupled (supervised pose, frozen policy) & \textbf{0.334} & \textbf{0.00576} & 0.660 \\
     Coupled E2E (ours, 50\% labels)            & 2.422 & 0.0710 & \textbf{0.865} \\
     \bottomrule
   \end{tabular}
