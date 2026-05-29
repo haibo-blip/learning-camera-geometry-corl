@@ -105,10 +105,8 @@ We evaluate on a single-arm Trossen WidowX AI with one wrist RealSense D405 and
 two scene-side RealSense D455F cameras.  The comparison is matched in protocol:
 our policy and both references use the same platform, camera hardware, rubrics,
 trial counts, and success definitions, and differ only in how camera geometry is
-obtained.  The scene cameras are not treated as fixed IDs: during data
-collection their calibrated extrinsics vary across episodes, and in the
-calibration-free rollout protocol the surrounds are physically moved between
-trials before pose is re-predicted.  The Plucker-GT and Plucker-RayZer numbers
+obtained. During data
+collection their calibrated extrinsics vary across episode.  The Plucker-GT and Plucker-RayZer numbers
 are the calibrated and decoupled baselines evaluated under this protocol on the
 same hardware~\citep{anonymous2026cameraaware}; baseline definitions, scoring,
 and dataset details are in \autoref{sec:appendix-implementation}.  Our E2E
