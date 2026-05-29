@@ -163,47 +163,55 @@ leader--follower setup, with one wrist Intel RealSense D405 camera and two
 scene-side RealSense D455F cameras.  Policies train from teleoperated episodes
 resampled to a 50 Hz state/action clock, predict 1-second action chunks, and
 represent each action as position, 6D rotation, and continuous gripper command.
-The comparison is \emph{matched end-to-end}: our policy and the calibrated
-Plucker-GT reference run on the same platform, the same wrist-plus-two-surround
-camera rig, and the identical per-task rubrics, trial counts, and success
-definitions, differing only in how camera geometry is obtained.  The reference
-consumes calibrated scene-camera extrinsics on every episode at both training
-and test time; our E2E camera-pose NVS policy instead uses camera-pose labels
-for only 50\% of training episodes and no calibration at inference, predicting
-camera geometry inside the policy.  Each cell reports full-task success and
+The comparison is \emph{matched end-to-end}: our policy and both references run
+on the same platform, the same wrist-plus-two-surround camera rig, and the
+identical per-task rubrics, trial counts, and success definitions, differing
+only in how camera geometry is obtained.  The calibrated Plucker-GT reference
+consumes scene-camera extrinsics on every episode at both training and test
+time; the decoupled Plucker-RayZer reference predicts pose at inference from a
+separately trained pose head plugged into a frozen policy; our E2E camera-pose
+NVS policy uses camera-pose labels for only 50\% of training episodes and no
+calibration at inference, predicting camera geometry inside the policy.  Each
+cell reports full-task success and
 rubric-weighted task progress over the stated trial count.  For Blocks-in-Bowl
 the trial has a 4-minute wall-clock cap, and the rubric gives one point per
 successful grasp and one point per successful placement across four blocks
 (eight points per trial; full success requires all four blocks placed).
 
 \paragraph{Results.}
-Table~\ref{tab:realworld} reports the matched comparison across the real-world
-task set.  On Blocks-in-Bowl the NVS policy reaches 100\% full-task success
-versus the calibrated reference's 50\% (86\% rubric progress), and the same
-pattern holds on the remaining tasks: averaged over the task set, our policy
-improves full-task success by XX percentage points over the calibrated
-Plucker-GT reference while using only half the pose labels and no
-inference-time calibration.  The gain therefore does not come from additional
-camera supervision; the calibration-heavier baseline is the one that
-underperforms.
+Table~\ref{tab:realworld} compares our coupled NVS policy against two references
+on the same platform: a calibrated Plucker-GT upper bound that uses full
+per-episode calibration, and a decoupled Plucker-RayZer baseline that --- like
+ours --- predicts camera pose at inference, but trains the pose head in
+isolation from a frozen policy.  Against the decoupled, calibration-free
+baseline, the natural apples-to-apples comparison, our policy wins on every task
+(Cup Stacking 85 vs.\ 80, Stand-up Cup 75 vs.\ 55, Blocks-in-Bowl 100 vs.\ 30;
+$+31.7$ points on average), mirroring the coupled-versus-decoupled gap seen on
+LIBERO-MV.  It also exceeds the calibrated Plucker-GT upper bound in aggregate
+($86.7$ vs.\ $70.0$ mean success) despite using only half the pose labels and no
+inference calibration, trailing it only on Cup Stacking, where the calibrated
+reference is already saturated at $100\%$.
 
 \begin{table}[t]
   \centering
-  \caption{Real-world matched comparison. Both methods share platform, camera
-  rig, rubric, and trial count. Plucker-GT uses full per-episode calibration;
-  our E2E camera-pose NVS policy uses 50\% episode-level pose labels and no
-  calibration at inference. Cells are full-task success / rubric-weighted
-  progress (\%).}
+  \caption{Real-world matched comparison on the same platform, rig, rubrics, and
+  trial counts. \texttt{Plucker-GT}: full per-episode calibration at train and
+  test (calibrated upper bound). \texttt{Plucker-RayZer}: decoupled
+  supervised-only pose head plugged into a frozen policy, calibration-free at
+  inference. \texttt{Ours}: coupled E2E NVS policy, 50\% pose labels,
+  calibration-free at inference. Cells are full-task success / rubric-weighted
+  progress (\%); best success per row in bold.}
   \label{tab:realworld}
   \begin{tabular}{lccc}
     \toprule
-    Task & Plucker-GT & Ours: E2E NVS & $\Delta$ success \\
+    Task & Plucker-GT & Plucker-RayZer & Ours: E2E NVS \\
+         & (calib., full) & (decoupled) & (coupled) \\
     \midrule
-    Cup Stacking    & \textbf{100} / \textbf{100} & XX / XX & XX \\
-    Stand-up Cup    & 60 / 60 & \textbf{75} / \textbf{77.5} & $+15$ \\
-    Blocks-in-Bowl  & 50 / 86 & \textbf{100} / \textbf{100} & $+50$ \\
+    Cup Stacking    & \textbf{100} / 100 & 80 / 80 & 85 / XX \\
+    Stand-up Cup    & 60 / 60 & 55 / 55 & \textbf{75} / 77.5 \\
+    Blocks-in-Bowl  & 50 / 86 & 30 / 65 & \textbf{100} / 100 \\
     \midrule
-    Mean            & XX / XX & XX / XX & XX \\
+    Mean            & 70.0 / 82.0 & 55.0 / 66.7 & \textbf{86.7} / XX \\
     \bottomrule
   \end{tabular}
 \end{table}
