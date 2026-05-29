@@ -1,85 +1,43 @@
-RGB visuomotor policies have become strong action predictors: modern imitation
-learning systems can map image observations and proprioception to action chunks
-with diffusion or flow-style decoders~\citep{chi2023diffusionpolicy,yan2025maniflow}.
-However, each image is also tied to a camera pose.  The same object relation can
-project to different pixels as the camera moves, and different viewpoints expose
-different occlusions, contact cues, and spatial relations.  Most image-based
-policy recipes do not expose this geometry to the model: they feed RGB
-observations directly to a policy and train it to predict actions.  In fixed or
-narrow camera setups, such policies can solve demonstrations by exploiting
-view-specific appearance cues, but these shortcuts need not transfer when camera
-placement or evaluation views change.  This makes camera extrinsics an important
-but unresolved design choice for policy encoders.
+RGB visuomotor policies can map image observations and proprioception to action
+chunks with diffusion or flow-style decoders~\citep{chi2023diffusionpolicy,yan2025maniflow},
+but they usually leave camera geometry implicit.  As cameras move, the same
+object relation appears at different image locations and occlusion or contact
+cues may be visible only from certain views.  Image-only policies can therefore
+learn view-specific shortcuts that weaken under camera shift.
 
-Existing systems make three different choices.  Image-only policies avoid
-calibration, but must infer cross-view correspondence from pixels alone.
-Recent camera-aware RGB policy work exposes geometry through calibrated
-Plucker ray maps or related pose encodings~\citep{anonymous2026cameraaware},
-with similar ray and pose encodings also used in view synthesis
-models~\citep{sitzmann2021lfn,li2025prope}.  Point-cloud policies provide even
-stronger spatial structure, but require depth and calibration~\citep{ze2024dp3}.
-These choices create a calibration and architecture gap.  Geometry-aware RGB
-policies usually assume known extrinsics, so methods that rely on explicit rays
-cannot directly use many uncalibrated demonstrations, even though their RGB
-observations and action labels are still useful.  Point-cloud pipelines face an
-additional cost: datasets without depth cannot be used directly, and the policy
-typically uses modality-specific 3D encoders rather than mature pretrained image
-backbones such as ViTs.
+Explicit geometry helps, but it raises the data requirement.  Calibrated
+camera-aware RGB policies expose Plucker rays or pose encodings to the
+encoder~\citep{anonymous2026cameraaware}; point-cloud policies expose spatial
+structure through depth and calibration~\citep{ze2024dp3}.  Demonstrations
+without extrinsics cannot directly supply those geometric features, and
+point-cloud pipelines additionally require depth and modality-specific 3D
+encoders.
 
-This paper asks whether camera geometry can be learned inside the control
-objective rather than supplied as fixed metadata.  We treat camera pose as an
-internal latent variable of the policy.  A pose predictor estimates each
-camera-to-world transform from RGB, the predicted transforms are converted into
-per-pixel ray features, and the downstream policy is trained end-to-end through
-these features.  Camera-pose labels are only required for a selected subset of
-training episodes; all episodes still provide action supervision and can pass
-gradients through the predicted geometry.  In the NVS variant, the target-view
-query rays are also constructed from the pose predictor rather than from
-ground-truth extrinsics, so an unlabeled episode can still provide view-synthesis
-supervision through its RGB target image.  The central question is therefore not
-whether a standalone pose head is metrically optimal, but whether partial pose
-supervision plus task and reconstruction losses can turn unlabeled camera
-episodes into useful training signal for control.
+We ask whether camera geometry can be learned inside the control objective
+instead of provided as fixed metadata.  A pose predictor estimates camera
+extrinsics from RGB, differentiable ray construction converts the predictions
+into per-pixel Plucker features, and the policy is trained end-to-end through
+those features.  Pose labels are needed only for selected training episodes.
+In the NVS variant, target-view queries are also built from predicted poses, so
+unlabeled episodes still provide view-synthesis supervision through their RGB
+targets.  Fig.~\ref{fig:pipeline} summarizes the action-only and NVS-regularized
+variants, while Fig.~\ref{fig:overview} illustrates the training signals.
 
-We study two model variants, summarized in Fig.~\ref{fig:pipeline}: an
-action-only camera-pose policy and an NVS-regularized policy.  Both predict
-camera pose inside the policy and train end-to-end from action supervision; the
-NVS variant additionally uses target-view reconstruction to regularize the
-observation representation during training.
+We evaluate on LIBERO-MV Spatial~\citep{liu2023libero}, MimicGen~\citep{mandlekar2023mimicgen},
+and matched real-world tabletop tasks.  On LIBERO-MV, a coupled policy with
+pose labels on only half of the episodes outperforms a fully-supervised
+decoupled pose-then-policy baseline by over 20 points; within coupled training,
+a \(48\times\) rotation-error reduction changes success by under five points.
+On MimicGen, NVS improves over the action-only variant by 13.1 points on
+train-camera evaluation and 23.1 points under tight-camera evaluation.  On the
+real robot, the NVS policy outperforms a decoupled calibration-free baseline and
+exceeds the calibrated Plucker-GT aggregate while using no calibration at
+inference.
 
-Fig.~\ref{fig:overview} illustrates the training setting and the three
-supervision signals.  We evaluate the models in simulation and on real-world
-tabletop manipulation.  On LIBERO-MV Spatial~\citep{liu2023libero}, we vary
-the fraction of episodes with ground-truth camera-pose labels and find that
-partial supervision is sufficient for strong control: with labels on only half
-of the episodes the coupled policy outperforms a fully-supervised decoupled
-pose-then-policy variant by over 20 points, even though that decoupled pose head
-is markedly more accurate metrically.  This comparison highlights a
-deployment-consistency issue: a frozen policy trained on ground-truth geometry
-can be sensitive to replacing that geometry with predicted poses at deployment.
-On MimicGen
-tasks~\citep{mandlekar2023mimicgen}, we compare image, point-cloud, and
-end-to-end camera-pose policies under both train-camera and tight-camera
-evaluation.  Averaged across the four MimicGen tasks, the NVS variant
-improves over the action-only variant by 13.1 percentage points on
-train-camera evaluation and 23.1 points under tight-camera evaluation.  On a
-real-world tabletop suite under a matched protocol, the NVS policy outperforms a
-decoupled calibration-free baseline and matches or exceeds the calibrated
-Plucker-GT reference in aggregate (100\% vs.\ 50\% full-task success on
-Blocks-in-Bowl), while using camera-pose labels for only half of the training
-episodes and no calibration at inference.
-
-The paper makes three contributions.  First, we formulate camera geometry
-learning as an end-to-end visuomotor control problem with episode-level
-semi-supervised camera-pose labels, so episodes without extrinsics still
-contribute action and representation-learning gradients.  Second, we present two
-camera-aware policy variants, one trained only with action and pose losses and
-one regularized by scene-token novel-view synthesis.  Third, we evaluate these
-policies on LIBERO-MV, MimicGen, and a real-world tabletop suite, and show that
-coupling geometry to the control objective improves over decoupled predicted-pose
-deployment, even when the decoupled pose head has lower metric error:
-task-useful camera geometry can be learned inside the policy objective while
-reducing reliance on fixed calibrated metadata at inference.
+The contribution is an end-to-end formulation for semi-supervised camera
+geometry learning, with action-only and scene-token NVS variants, showing that
+task-useful geometry can be learned inside the policy objective while retaining
+training signal from episodes without camera extrinsics.
 
 \begin{figure}[t]
   \centering

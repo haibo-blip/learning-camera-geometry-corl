@@ -40,8 +40,10 @@ The action-only policy optimizes \(\mathcal{L}_{\text{act}}+
 \(\lambda_{\text{nvs}}\mathcal{L}_{\text{nvs}}\) with
 \(\lambda_{\text{nvs}}=1.0\).  The scene-token encoder uses hidden size 384, 12
 transformer layers, 6 attention heads, patch size 8, and 64 active scene tokens.
-The NVS decoder uses hidden size 384, 8 transformer layers, and 6 attention
-heads.  \(\mathcal{L}_{\text{nvs}}\) combines pixel MSE with VGG-LPIPS at
+The encoder appends learned active scene tokens to the multi-view patch sequence;
+after self-attention, patch tokens are discarded and only the active scene tokens
+are retained.  The NVS decoder uses hidden size 384, 8 transformer layers, and 6
+attention heads.  \(\mathcal{L}_{\text{nvs}}\) combines pixel MSE with VGG-LPIPS at
 \(\beta=0.5\).  For each NVS training example, one available view is sampled as
 the target.  Its
 RGB image is the reconstruction target, while its predicted ray map is used as
@@ -87,12 +89,13 @@ Plucker-RayZer reference numbers are the calibrated and decoupled baselines
 evaluated under the same protocol on the same
 hardware~\citep{anonymous2026cameraaware}.  Actions are predicted in the absolute
 end-effector frame (position, 6D rotation, continuous gripper) as 1-second
-chunks at 50 Hz.  Each cell reports full-task success and rubric-weighted task
-progress.  Cup Stacking and Stand-up Cup use 20 trials each (rubric max 2 points
-per trial); Blocks-in-Bowl uses 10 trials under a 4-minute wall-clock cap, with
-the rubric giving one point per successful grasp and one per successful
-placement across four blocks (eight points per trial; full success requires all
-four blocks placed).
+chunks at 50 Hz.  The platform is a Trossen WidowX AI with one wrist Intel
+RealSense D405 camera and two scene-side RealSense D455F cameras.  Each cell
+reports full-task success and rubric-weighted task progress.  Cup Stacking and
+Stand-up Cup use 20 trials each (rubric max 2 points per trial);
+Blocks-in-Bowl uses 10 trials under a 4-minute wall-clock cap, with one point
+per successful grasp and one per successful placement across four blocks (eight
+points per trial; full success requires all four blocks placed).
 
 \section{Camera-Pose Loss}
 

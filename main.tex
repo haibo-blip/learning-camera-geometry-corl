@@ -20,9 +20,22 @@
 \maketitle
 
 \begin{abstract}
-RGB robot policies often treat camera placement as fixed context, even though the camera pose determines which spatial cues are visible and how pixels correspond across views. Geometry-aware policies can condition on calibrated poses, rays, depth, or point clouds, but those signals are typically supplied outside the policy objective and are unavailable for episodes without camera extrinsics. This paper asks whether camera geometry can instead be learned inside visuomotor training. We study two end-to-end camera-aware imitation learning variants: an action policy that predicts camera poses and conditions its observation encoder on predicted ray features, and an NVS-regularized policy that adds target-view reconstruction over latent scene tokens. Because both policy rays and NVS target queries are built from predicted poses, ground-truth extrinsics are used only for the semi-supervised pose loss; all episodes can still train through action loss and, in the NVS variant, view-synthesis loss.
-
-On LIBERO-MV Spatial, partial pose supervision is sufficient for strong control: with pose labels on only 50\% of episodes the coupled policy reaches 0.865 success, well above a decoupled two-stage variant that trains a pose head with full supervision and feeds it to a frozen policy (0.660). The decoupled head is in fact far more accurate metrically (0.33$^\circ$ vs.\ 2.42$^\circ$ rotation error), suggesting that a pose regressor trained in isolation is not automatically a drop-in substitute for the geometry distribution used to train a policy. On MimicGen evaluations across four tasks, NVS regularization improves over the action-only camera-aware policy by 13.1 percentage points on train-camera evaluation and 23.1 points under tight-camera evaluation. On a real-world tabletop suite under a matched protocol, the NVS policy outperforms a decoupled calibration-free baseline and matches or exceeds the calibrated Plucker-GT reference in aggregate (100\% vs.\ 50\% full-task success on Blocks-in-Bowl), while using camera-pose labels for only half of the training episodes and no calibration at inference. These results suggest that camera geometry is most useful when optimized jointly with control, and that view-synthesis supervision can turn episodes without camera-extrinsic labels into useful representation-learning signal.
+RGB robot policies often leave camera geometry implicit, while calibrated ray,
+depth, and point-cloud policies require geometry that is unavailable for many
+demonstrations.  We study end-to-end camera-geometry learning for imitation:
+a pose head predicts camera extrinsics from RGB, differentiable Plucker ray
+construction feeds an action policy, and an optional scene-token NVS branch
+reconstructs target views from predicted-pose queries.  Ground-truth extrinsics
+supervise only a subset pose loss; unlabeled episodes still train through action
+loss and, for the NVS variant, view-synthesis loss.  On LIBERO-MV Spatial, using
+pose labels on 50\% of episodes yields 0.865 success, outperforming a fully
+supervised decoupled pose-then-policy baseline at 0.660.  Across the coupled
+label sweep, a 48$\times$ reduction in rotation error changes success by under
+five points.  On four MimicGen tasks, NVS improves over the action-only variant
+by 13.1 train-camera points and 23.1 tight-camera points.  On matched real-world
+tabletop tasks, the NVS policy outperforms a decoupled calibration-free baseline
+and exceeds the calibrated Plucker-GT aggregate while using pose labels for only
+half of training episodes and no calibration at inference.
 \end{abstract}
 
 \keywords{End-to-end camera geometry learning, Visuomotor control, Novel view synthesis}

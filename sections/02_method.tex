@@ -1,47 +1,23 @@
-Our goal is to train an RGB policy that can use camera geometry without
-requiring calibrated camera poses at test time.  The central design is to make
-camera pose an internal latent variable: a pose predictor estimates the
-camera-to-world transform of each input view, the estimated transforms are
-converted into per-pixel ray features, and the downstream policy is trained
-end-to-end through these geometric features.  As shown in
-Fig.~\ref{fig:pipeline}, we instantiate this idea in two variants.  The
-\emph{E2E camera-pose action policy} feeds RGB and predicted ray features into
-an observation encoder and trains an action expert by behavior cloning.  The
-\emph{E2E camera-pose NVS policy} uses a separate scene-token encoder and adds a
-training-time novel-view synthesis objective.  Given a target camera query built
-from the pose head's predicted target pose, an NVS decoder reconstructs the
-target view from the scene tokens, following the view-synthesis idea that
-renderable latent representations must preserve object layout, occlusion, and
-camera geometry~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.
-The decoder is discarded at inference; its role is to regularize the policy
-representation during training.
+Our goal is to train an RGB policy that uses camera geometry without calibrated
+scene-camera extrinsics at test time.  A pose predictor estimates each input
+camera pose, differentiable ray construction converts the estimates into
+per-pixel Plucker features, and the downstream policy is trained end-to-end
+through those features.  Fig.~\ref{fig:pipeline} shows two variants: an
+action-only policy trained with behavior cloning and pose supervision, and an
+NVS-regularized policy that reconstructs target views from latent scene tokens
+during training.  The NVS decoder is discarded at inference.
 
 \subsection{Problem Setup}
 
 At time \(t\), the policy observes \(N\) RGB views
-\(\mathcal{I}_t=\{I_{t,i}\}_{i=1}^{N}\), proprioception \(q_t\), and a task
-condition \(c\) such as a language embedding.  It predicts an action chunk
-\(A_t=\{a_t,\ldots,a_{t+H-1}\}\in\mathbb{R}^{H\times d_a}\).  In our
-implementation \(H=32\) and each action contains end-effector translation,
-6D rotation, and gripper command.  Camera \(i\) has intrinsics \(K_i\) and an
-extrinsic transform \(T_{t,i}\in SE(3)\), expressed relative to an anchor frame
-(in our setup the wrist camera, whose transform is known from robot
-kinematics); the pose head predicts each remaining camera in this anchor frame.
-``No calibration at inference'' therefore means no calibrated scene-camera
-extrinsics --- a known kinematic anchor is still assumed, as in calibrated
-multi-view baselines.  We do not assume that \(T_{t,i}\)
-is available for every training episode.  Pose annotation is assigned at the
-episode level: for episode \(e\), a binary mask \(m_e\in\{0,1\}\) indicates
-whether all camera poses in that episode are labeled.  The label ratio
-\(\rho\) is therefore the fraction of training episodes with camera-pose
-annotations.
-
-The policy should therefore solve two coupled problems.  It must infer enough
-camera geometry to express pixels in a shared spatial frame, and it must use
-that representation to predict actions.  This coupling is important: when
-\(\rho\) is small, camera-pose supervision alone is insufficient, so the action
-and reconstruction objectives must also shape the pose predictor and the
-observation encoder.
+\(\mathcal{I}_t=\{I_{t,i}\}_{i=1}^{N}\), proprioception \(q_t\), and task
+condition \(c\), and predicts an action chunk \(A_t\).  Camera \(i\) has known
+intrinsics \(K_i\) and an extrinsic transform \(T_{t,i}\in SE(3)\) expressed in
+an anchor frame.  ``No calibration at inference'' means no calibrated
+scene-camera extrinsics; a known kinematic anchor is still assumed, as in the
+calibrated multi-view baselines.  Training poses are episode-level labels: a
+binary mask \(m_e\in\{0,1\}\) indicates whether episode \(e\) provides camera
+poses, and the label ratio \(\rho\) is the fraction of labeled episodes.
 
 \subsection{Semi-Supervised Camera-Pose Prediction}
 
@@ -99,10 +75,9 @@ action chunk from the action decoder.
 
 \subsection{E2E Camera-Pose NVS Policy}
 
-The second variant adds an explicit 3D representation pressure through
-scene-token novel-view synthesis.  This model uses a separate observation
-encoder from the action-only variant.  The encoder maps source views and their
-predicted ray features into a fixed set of latent scene tokens:
+The second variant adds a renderability pressure through scene-token
+novel-view synthesis.  A separate encoder maps source views and their predicted
+ray features into latent scene tokens:
 \begin{equation}
 R_t = F_\theta\left(\{I_{t,i},P_{t,i}\}_{i=1}^{N}\right),
 \qquad R_t\in\mathbb{R}^{M\times D}.
@@ -126,13 +101,10 @@ ground-truth, poses, so the reconstruction objective requires no
 camera-extrinsic labels: the target's RGB image is the only supervision it
 needs, which is what lets episodes without pose labels still contribute NVS
 gradients.
-To prevent trivial copying, the target view's encoder input is masked with
-probability \(p_{\text{drop}}\) (set to 0.6, high enough that the decoder
-usually cannot see the target and must instead use the other views' scene
-evidence), so the decoder must reconstruct the target
-image from the remaining scene evidence stored in the scene tokens.  The NVS
-decoder \(D_\omega\) patchifies the target-view ray map, uses those target-ray
-tokens as queries, and cross-attends only to the retained scene tokens:
+To prevent trivial copying, the target observation is dropped from the
+scene-token encoder input during NVS training, forcing reconstruction from the
+remaining views.  The NVS decoder \(D_\omega\) uses target-ray tokens as queries
+and attends to the scene tokens:
 \begin{equation}
 \hat{I}_{t,j} =
 D_\omega\left(R_t, P_{t,j}\right).
@@ -153,13 +125,9 @@ training objective is
 +\lambda_{\text{nvs}}\mathcal{L}_{\text{nvs}}.
 \end{equation}
 
-The NVS decoder is used only during training.  At inference, the policy keeps
-the pose head, scene-token observation encoder, and action expert, but it discards
-the reconstruction head.  This preserves the end-to-end action policy interface:
-the robot receives only RGB, proprioception, and task conditioning, while camera
-geometry is inferred internally.
-Implementation and checkpoint-selection details are summarized in
-\autoref{sec:appendix-implementation}.
+At inference, the policy keeps the pose head, scene-token encoder, and action
+expert, but discards the NVS decoder.  Implementation and checkpoint-selection
+details are summarized in \autoref{sec:appendix-implementation}.
 
 \begin{figure}[t]
     \centering

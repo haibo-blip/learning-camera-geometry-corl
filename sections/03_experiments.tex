@@ -2,37 +2,31 @@
 
 \paragraph{Goal and protocol.}
 The LIBERO-MV Spatial experiment isolates how much camera-pose supervision is
-needed.  We follow the LIBERO-MV Spatial protocol of Camera-Aware Multi-View
-Visuomotor Policies~\citep{anonymous2026cameraaware}: each episode is re-rendered
-with 12 surround cameras, the policy receives two random surround views, and
-evaluation runs all 10 tasks at 50 rollouts each (500 per method).  Remaining
-setup (resolution, action space, replanning) is in
-\autoref{sec:appendix-implementation}.
+needed for end-to-end camera-pose learning.  We follow the LIBERO-MV Spatial
+protocol of Camera-Aware Multi-View Visuomotor Policies~\citep{anonymous2026cameraaware}:
+policies receive two random surround views and are evaluated on all 10 Spatial
+tasks with 50 rollouts each.  Resolution, action horizon, optimization, and
+camera sampling details are in \autoref{sec:appendix-implementation}.
 
 \paragraph{Compared methods.}
 The reference methods share our backbone and action decoder and change only how
 camera geometry enters the encoder: \texttt{ViT+CamID} uses a learned camera
 identity with no metric geometry, \texttt{Plucker-GT} concatenates calibrated
 Plucker ray maps to RGB, and \texttt{PRoPE-GT} injects calibrated relative pose
-inside attention; all run under the same protocol as our policies.  Our E2E
+inside attention.  Our E2E
 camera-pose action policy instead predicts pose from RGB and trains the pose
-head jointly with the action objective, with episode-level pose labels.
+head jointly with action prediction; unlabeled episodes contribute action loss
+but no pose loss.
 
 \paragraph{Pose-label sweep.}
 We vary the fraction of pose-labeled training episodes over
-\(\{10,30,50,80,100\}\%\).  The labeled subset is selected by a deterministic
-episode-level split seed, and unlabeled episodes remain in the behavior-cloning
-dataset.  Fig.~\ref{fig:libero} shows two trends.  First, a small amount of pose
-supervision is already useful: the 10\% setting already exceeds the calibrated
-Plucker baseline (0.820 vs.\ 0.622) and approaches the stronger calibrated PRoPE
-reference (0.842).  Second, although our ray construction follows
-the Plucker representation, and the calibrated Plucker baseline is weaker than
-PRoPE on Spatial, end-to-end success stays high across the sweep (0.78--0.87),
-with the best setting matching the calibrated PRoPE reference; given single-seed
-noise we do not read the 50\% value as a true optimum.  This suggests that
-action loss can shape predicted geometry toward
-what the policy needs for control, rather than merely reproducing the calibrated
-geometry used by a fixed encoder.
+\(\{10,30,50,80,100\}\%\), keeping unlabeled episodes in the behavior-cloning
+dataset.  Fig.~\ref{fig:libero} shows that 10\% pose labels already exceed the
+calibrated Plucker baseline (0.820 vs.\ 0.622), and the best E2E run matches the
+stronger calibrated PRoPE reference.  Across the sweep, success remains high
+(0.78--0.87) despite large differences in standalone pose error, suggesting that
+the action objective shapes predicted geometry toward what the policy needs for
+control.
 
 \begin{figure}[t]
   \centering
@@ -42,76 +36,44 @@ geometry used by a fixed encoder.
 \end{figure}
 
 \paragraph{Coupled vs.\ decoupled geometry.}
-A natural alternative is to learn camera geometry \emph{outside} the control
-objective: train a pose head in isolation by supervised regression of the
-calibrated extrinsics, then plug its predictions into a frozen geometry-trained
-policy.  This is a deployment-consistency test rather than a fully controlled
-isolation of joint optimization: the frozen policy is trained on ground-truth
-rays but deployed with predicted rays, while the coupled policy is trained and
-evaluated on its own predicted geometry.  Under the identical LIBERO-MV Spatial
-protocol, the decoupled two-stage variant reaches \(0.660\) success using
-\emph{full} pose supervision, whereas our coupled E2E camera-pose action policy
-reaches \(0.865\) using pose labels for only \(50\%\) of episodes --- a
-\(20.5\)-point gain at half the label budget --- even though the decoupled pose
-head is metrically far more accurate (\(0.33^\circ\) vs.\ \(2.42^\circ\)
-rotation error; per-ratio numbers in \autoref{tab:appendix-pose-sweep}).
-
-The label-ratio sweep provides a complementary within-coupled view.  Each
-coupled run trains and evaluates with its own predicted rays, so it removes this
-train--test geometry mismatch (though label-subset, single-seed, and
-training-noise variation remain).  Across the sweep, reducing rotation error
-from \(7.6^\circ\) to \(0.16^\circ\) changes Spatial success by under five
-points, suggesting that within end-to-end training, lower standalone pose error
-is not the main determinant of control performance: the policy instead learns
-geometry that is useful for, and consistent with, the control objective.
+A natural alternative is to train a pose head by supervised regression, then
+plug its predictions into a frozen geometry-conditioned policy.  This decoupled
+variant is a deployment-consistency test: the frozen policy is trained on
+ground-truth rays but deployed with predicted rays.  Under the identical
+protocol, it reaches \(0.660\) success using full pose supervision, whereas our
+coupled policy reaches \(0.865\) with pose labels for only \(50\%\) of episodes.
+The decoupled pose head has lower rotation error (\(0.33^\circ\) vs.\
+\(2.42^\circ\)), so a low-error pose predictor is not automatically a drop-in
+substitute for the geometry distribution used to train a policy.  The label
+sweep provides a complementary within-coupled view: each run trains and
+evaluates on its own predicted rays, and reducing rotation error from
+\(7.6^\circ\) to \(0.16^\circ\) changes Spatial success by under five points
+(\autoref{tab:appendix-pose-sweep}).
 
 \subsection{MimicGen Camera-Shift Evaluation}
 
-\paragraph{Dataset and splits.}
-We use MimicGen~\citep{mandlekar2023mimicgen} as a second simulation benchmark
-because its generated demonstrations vary more episode-to-episode than
-LIBERO-MV, a stronger test under camera shift.  We report four tasks of
-increasing difficulty --- Stack (near-saturated), Stack Three, Coffee, and
-Threading --- trained on the corresponding multicamera demonstrations (12
-surround cameras per episode, 5\% held out by a fixed seed).
-
-\paragraph{Camera distributions.}
-Input cameras are sampled from a \texttt{train\_wide} distribution at training;
-we evaluate on both \texttt{train\_wide} and a held-out \texttt{eval\_tight}
-distribution whose surround cameras span a narrower angular range than training
-(Fig.~\ref{fig:overview}), separating in-distribution learning from
-camera-distribution transfer (40 rollouts per setting).  We report a single
-validation-selected checkpoint for both camera settings; selection details are
-in \autoref{sec:appendix-implementation}.
-
-\paragraph{Methods and inputs.}
-We compare against Diffusion Policy~\citep{chi2023diffusionpolicy} as the image
-baseline and ManiFlow~\citep{yan2025maniflow} as the point-cloud baseline.  We
-follow the original hyperparameters as closely as possible for both baselines;
-for ManiFlow, we use 1024 points to provide a higher-resolution point-cloud
-input.  The two proposed methods are the E2E camera-pose action policy and the
-E2E camera-pose NVS policy described in the Method section and
-Fig.~\ref{fig:pipeline}; implementation hyperparameters and rollout-reporting
-details are summarized in \autoref{sec:appendix-implementation}.
+\paragraph{Protocol and baselines.}
+MimicGen~\citep{mandlekar2023mimicgen} provides stronger episode-to-episode
+variation than LIBERO-MV.  We evaluate four tasks --- Stack, Stack Three, Coffee,
+and Threading --- under the training \texttt{train\_wide} camera distribution and
+a held-out \texttt{eval\_tight} distribution illustrated in Fig.~\ref{fig:overview}.
+Each camera setting uses 40 rollouts per evaluation checkpoint, and checkpoint
+selection is based on validation rollout success.  We compare to Diffusion
+Policy~\citep{chi2023diffusionpolicy} as an image baseline and
+ManiFlow~\citep{yan2025maniflow} as a point-cloud baseline; split, camera,
+checkpoint, and hyperparameter details are in
+\autoref{sec:appendix-implementation}.
 
 \paragraph{Results.}
-Fig.~\ref{fig:mimicgen-results} reports the four-task result set.  The
-final group reports a macro-average over the displayed tasks.  The NVS policy
-improves over the E2E camera-pose action policy by 13.1 percentage points on
-train-camera evaluation and 23.1 points under tight-camera evaluation.  The gain
-in both regimes indicates that NVS is a general representation regularizer, not
-only a camera-shift fix: even under the training camera distribution it forces
-the scene tokens to encode object layout and occlusion rather than
-action-correlated appearance shortcuts, which raises in-distribution success;
-the larger tight-camera gain shows the benefit grows when those appearance
-shortcuts break as the camera moves.  On Stack, it matches the action-only
-variant on train-camera evaluation at 97.5\% success and improves tight-camera
-success from 2.5\% to 42.5\%.  Relative to the point-cloud ManiFlow baseline,
-the comparison is mixed rather than dominant: averaged over the four tasks our
-NVS policy leads on train-camera success (46.9\% vs.\ 34.4\%) but trails on
-tight-camera success (23.8\% vs.\ 31.9\%), so we do not claim to beat depth-based
-point clouds under camera shift --- only to be competitive from RGB alone,
-without depth or calibration at inference.
+Fig.~\ref{fig:mimicgen-results} reports episode-level success.  The NVS policy
+improves over the E2E camera-pose action policy by 13.1 points on train-camera
+evaluation and 23.1 points under tight-camera evaluation.  On Stack, it matches
+the action-only variant on train-camera evaluation at 97.5\% and improves
+tight-camera success from 2.5\% to 42.5\%.  Relative to ManiFlow, the comparison
+is mixed: averaged over four tasks, our NVS policy leads on train-camera success
+(46.9\% vs.\ 34.4\%) but trails on tight-camera success (23.8\% vs.\ 31.9\%).
+We therefore claim competitiveness from RGB alone, not dominance over
+depth-based point clouds under camera shift.
 
 \begin{figure}[t]
   \centering
@@ -121,56 +83,42 @@ without depth or calibration at inference.
 \end{figure}
 
 \paragraph{Ablations.}
-Ablations on Stack Three (\autoref{fig:mimicgen-ablations}) support both
-components: adding E2E pose prediction lifts train-camera success from 17.5\% to
-30\%, and adding NVS reaches 55\% train / 25\% tight; removing the scene-token
-bottleneck leaves train-camera unchanged (55\%) but halves tight-camera success
-(25\%~$\to$~7.5\%), so the bottleneck matters most under camera shift.
+Stack Three ablations support both design choices
+(\autoref{fig:mimicgen-ablations}).  Removing end-to-end camera-pose prediction
+and NVS gives 17.5\% train-camera success and 0\% tight-camera success; adding
+E2E pose prediction lifts train-camera success to 30\%, and adding NVS reaches
+55\% train / 25\% tight.  Removing the scene-token bottleneck keeps train-camera
+success at 55\% but drops tight-camera success from 25\% to 7.5\%, indicating
+that the bottleneck matters most under camera shift.
 
 \subsection{Real-World Tabletop Evaluation}
 
 \paragraph{Protocol and supervision budget.}
-We evaluate on a single-arm Trossen WidowX AI (one wrist and two scene-side
-RealSense cameras).  The comparison is \emph{matched in protocol}: our policy and
-both references use the same robot, camera rig, per-task rubrics, trial counts,
-and success definitions, and differ only in how camera geometry is obtained ---
-so this is not a cross-paper mix of different hardware, tasks, or scoring rules.
-The Plucker-GT and Plucker-RayZer reference numbers are the calibrated and
-decoupled baselines under this protocol on the same
-hardware~\citep{anonymous2026cameraaware}; our E2E camera-pose NVS policy uses
-pose labels for only 50\% of training episodes and no calibration at inference.
-Each cell reports full-task success / rubric-weighted progress; rubric and
-action-space details are in \autoref{sec:appendix-implementation}.
+We evaluate on a single-arm Trossen WidowX AI with one wrist RealSense D405 and
+two scene-side RealSense D455F cameras.  The comparison is matched in protocol:
+our policy and both references use the same platform, camera rig, rubrics, trial
+counts, and success definitions, and differ only in how camera geometry is
+obtained.  The Plucker-GT and Plucker-RayZer numbers are the calibrated and
+decoupled baselines evaluated under this protocol on the same
+hardware~\citep{anonymous2026cameraaware}; scoring details are in
+\autoref{sec:appendix-implementation}.  Our E2E camera-pose NVS policy uses pose
+labels for 50\% of training episodes and no calibration at inference.
 
 \paragraph{Results.}
-Table~\ref{tab:realworld} compares our coupled NVS policy against two references
-on the same platform: a calibrated Plucker-GT upper bound that uses full
-per-episode calibration, and a decoupled Plucker-RayZer baseline that --- like
-ours --- predicts camera pose at inference, but trains the pose head in
-isolation from a frozen policy.  Cup Stacking and Stand-up Cup use 20 trials
-each and Blocks-in-Bowl uses 10.  Against the decoupled, calibration-free
-baseline --- the natural apples-to-apples comparison --- our policy is at least
-as strong on every task and wins decisively on two (Stand-up Cup 75 vs.\ 55,
-Blocks-in-Bowl 100 vs.\ 30), with a narrow one-trial edge on Cup Stacking
-(85 vs.\ 80, i.e.\ $17/20$ vs.\ $16/20$); the mean gap is $+31.7$ points,
-mirroring the coupled-versus-decoupled gap seen on LIBERO-MV.  It also exceeds
-the calibrated Plucker-GT reference in aggregate ($86.7$ vs.\ $70.0$ mean
-success) despite using only half the pose labels and no inference calibration,
-though this aggregate is driven mainly by Blocks-in-Bowl ($100$ vs.\ $50$);
-on Cup Stacking the calibrated reference is saturated at $100\%$ and wins.
+Table~\ref{tab:realworld} compares our coupled NVS policy against a calibrated
+Plucker-GT reference and a decoupled Plucker-RayZer baseline.  Cup Stacking and
+Stand-up Cup use 20 trials each and Blocks-in-Bowl uses 10.  Against the
+decoupled calibration-free baseline, our policy is at least as strong on every
+task and wins decisively on Stand-up Cup (75 vs.\ 55) and Blocks-in-Bowl
+(100 vs.\ 30).  It also exceeds the calibrated Plucker-GT reference in aggregate
+(86.7 vs.\ 70.0 mean success), although the gain is driven mainly by
+Blocks-in-Bowl and the calibrated reference remains saturated on Cup Stacking.
 
 \begin{table}[t]
   \centering
   \caption{Real-world comparison under a matched protocol on the same platform,
-  rig, and rubrics; reference numbers are the calibrated and decoupled baselines
-  evaluated under the same protocol on the same hardware. Trial counts: Cup
-  Stacking and Stand-up Cup 20 each, Blocks-in-Bowl 10.
-  \texttt{Plucker-GT}: full per-episode calibration at train and test (calibrated
-  reference). \texttt{Plucker-RayZer}: decoupled supervised-only pose head
-  plugged into a frozen policy, calibration-free at inference. \texttt{Ours}:
-  coupled E2E NVS policy, 50\% pose labels, calibration-free at inference. Cells
-  are full-task success / rubric-weighted progress (\%); best success per row in
-  bold.}
+  camera rig, and rubrics. Cells are full-task success / rubric-weighted progress
+  (\%); best success per row in bold.}
   \label{tab:realworld}
   \begin{tabular}{lccc}
     \toprule
@@ -189,6 +137,6 @@ on Cup Stacking the calibrated reference is saturated at $100\%$ and wins.
 \paragraph{Scope.}
 These are controlled point comparisons on a fixed real-robot task set with
 small per-task trial counts, not a broad real-world generalization claim.  The
-takeaway is specific: under a strictly weaker geometric-supervision budget and
-no inference-time calibration, the learned-geometry policy matches or exceeds a
+takeaway is specific: under a weaker geometric-supervision budget and no
+inference-time calibration, the learned-geometry policy matches or exceeds a
 calibrated geometry-aware reference on the same hardware and rubric.
