@@ -127,9 +127,15 @@ appendix.
 Fig.~\ref{fig:mimicgen-results} reports the four-task result set.  The
 final group reports a macro-average over the displayed tasks.  The NVS policy
 improves over the E2E camera-pose action policy by 13.1 percentage points on
-train-camera evaluation and 23.1 points under tight-camera evaluation.  On
-Stack, it matches the action-only variant on train-camera evaluation at 97.5\%
-success and improves tight-camera success from 2.5\% to 42.5\%.
+train-camera evaluation and 23.1 points under tight-camera evaluation.  The gain
+in both regimes indicates that NVS is a general representation regularizer, not
+only a camera-shift fix: even under the training camera distribution it forces
+the scene tokens to encode object layout and occlusion rather than
+action-correlated appearance shortcuts, which raises in-distribution success;
+the larger tight-camera gain shows the benefit grows when those appearance
+shortcuts break as the camera moves.  On Stack, it matches the action-only
+variant on train-camera evaluation at 97.5\% success and improves tight-camera
+success from 2.5\% to 42.5\%.
 
 \begin{figure}[t]
   \centering
