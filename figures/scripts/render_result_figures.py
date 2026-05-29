@@ -11,13 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 
 COLORS = {
-    "vit": "#8C96A8",
-    "plucker": "#4E79A7",
-    "prope": "#E15759",
-    "action": "#159D8C",
-    "nvs": "#E88412",
-    "dp": "#6B7280",
-    "maniflow": "#7B66FF",
+    "image": "#6B7280",
+    "geometry": "#3B82C4",
+    "pose": "#7C5CC4",
+    "action": "#17997F",
+    "nvs": "#D97706",
     "grid": "#D9E0EA",
     "text": "#1F2937",
 }
@@ -76,7 +74,7 @@ def render_libero() -> None:
 
     labels = [r["method"] for r in baselines]
     values = [float(r["success"]) * 100 for r in baselines]
-    colors = [COLORS["vit"], COLORS["plucker"], COLORS["prope"], COLORS["action"]]
+    colors = [COLORS["image"], COLORS["geometry"], COLORS["pose"], COLORS["action"]]
     y = np.arange(len(labels))
     ax0.barh(y, values, color=colors, height=0.23, alpha=0.26)
     ax0.scatter(values, y, s=150, color=colors, zorder=3)
@@ -93,8 +91,8 @@ def render_libero() -> None:
     ratios = np.array([float(r["ratio"]) for r in sweep])
     sr = np.array([float(r["success"]) * 100 for r in sweep])
     ax1.plot(ratios, sr, color=COLORS["action"], linewidth=4.0, marker="o", markersize=9)
-    ax1.axhline(84.2, color=COLORS["prope"], linestyle="--", linewidth=2.0, alpha=0.42)
-    ax1.scatter([10], [84.2], marker="*", s=190, color=COLORS["prope"], zorder=4)
+    ax1.axhline(84.2, color=COLORS["pose"], linestyle="--", linewidth=2.0, alpha=0.42)
+    ax1.scatter([10], [84.2], marker="*", s=190, color=COLORS["pose"], zorder=4)
     ax1.annotate(
         "best E2E action\n86.5%",
         xy=(50, 86.5),
@@ -104,7 +102,7 @@ def render_libero() -> None:
         color=COLORS["action"],
         ha="left",
     )
-    ax1.text(12.5, 84.35, "PRoPE-GT 84.2%", color=COLORS["prope"], fontsize=12, va="bottom")
+    ax1.text(12.5, 84.35, "PRoPE-GT 84.2%", color=COLORS["pose"], fontsize=12, va="bottom")
     ax1.set_xlim(5, 105)
     ax1.set_ylim(74, 90)
     ax1.set_xticks([10, 30, 50, 80, 100])
@@ -122,8 +120,8 @@ def render_mimicgen() -> None:
     tasks = ["Stack Three", "Coffee", "Threading", "Stack"]
     plot_labels = tasks + ["Mean"]
     methods = [
-        ("Diffusion Policy", "Diffusion Policy\n(image)", COLORS["dp"]),
-        ("ManiFlow", "ManiFlow\n(point cloud)", COLORS["maniflow"]),
+        ("Diffusion Policy", "Diffusion Policy\n(image)", COLORS["image"]),
+        ("ManiFlow", "ManiFlow\n(point cloud)", COLORS["geometry"]),
         ("E2E camera-pose action policy", "E2E camera-pose\naction policy", COLORS["action"]),
         ("E2E camera-pose NVS policy", "E2E camera-pose\nNVS policy", COLORS["nvs"]),
     ]
@@ -198,7 +196,7 @@ def render_mimicgen_ablations() -> None:
     ]
     by_key = {(r["ablation"], r["variant"]): r for r in rows}
     evals = [
-        ("train_success", "Train-camera", COLORS["plucker"]),
+        ("train_success", "Train-camera", COLORS["geometry"]),
         ("tight_success", "Tight-camera", COLORS["nvs"]),
     ]
 
@@ -247,7 +245,7 @@ def render_realworld() -> None:
     ]
     success = [float(rows[0]["success"]) * 100, float(rows[1]["success"]) * 100]
     progress = [float(rows[0]["progress"]) * 100 if rows[0]["progress"] else np.nan, np.nan]
-    colors = [COLORS["plucker"], COLORS["nvs"]]
+    colors = [COLORS["geometry"], COLORS["nvs"]]
 
     fig, ax = plt.subplots(figsize=(5.6, 4.0))
     fig.patch.set_facecolor("white")
