@@ -144,6 +144,42 @@ are logged from held-out visualization rollouts.
   \end{tabular}}
 \end{table}
 
+\section{Failure Analysis: Tight-Camera Pose Shift}
+\label{sec:appendix-tight-failure}
+
+The tight-camera evaluation changes the viewpoint distribution while keeping the
+selected policy checkpoint fixed.  One measurable failure mode is that the
+camera-pose predictor becomes less accurate on this shifted distribution, which
+then corrupts the Plucker rays consumed by the policy.  On Coffee D2, the NVS
+policy's translation error increases from \(0.002\) m on \texttt{train\_wide} to
+\(0.015\) m on \texttt{eval\_tight}.  This pose shift is consistent with the
+drop in tight-camera policy success: the rollout is still end to end, but the
+geometric input to the action expert is noisier than in the train-camera
+setting.
+
+\autoref{tab:appendix-tight-failure} also suggests why the NVS auxiliary loss
+helps under camera shift.  On the same Coffee D2 tight-camera setting, the
+action-only policy reaches \(0.075\) m translation error, compared with
+\(0.015\) m for the NVS-regularized policy.  The result is not a complete causal
+proof, since tight-camera rollouts also change object appearance and occlusion,
+but it shows that the NVS objective improves the predicted camera geometry in a
+failure regime where the action-only model loses accuracy.
+
+\begin{table}[ht]
+  \centering
+  \caption{Coffee D2 camera-pose translation error under train-camera and
+  tight-camera evaluation.  Lower is better.}
+  \label{tab:appendix-tight-failure}
+  \begin{tabular}{lcc}
+    \toprule
+    Model & \texttt{train\_wide} trans. err. (m) & \texttt{eval\_tight} trans. err. (m) \\
+    \midrule
+    E2E camera-pose action policy & -- & 0.075 \\
+    E2E camera-pose NVS policy & 0.002 & 0.015 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \section{LIBERO-MV Pose Accuracy vs.\ Label Ratio}
 \label{sec:appendix-pose-sweep}
 
