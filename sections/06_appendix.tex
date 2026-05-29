@@ -19,9 +19,8 @@ flow-matching velocity field along the interpolation
 where \(z_t\) is the (ray-conditioned or scene-token) observation embedding.
 
 \paragraph{Pose and ray construction.}
-All proposed variants assume known camera intrinsics and a known kinematic
-anchor frame, but do not use calibrated scene-camera extrinsics at inference.
-The pose head predicts the non-anchor scene-camera extrinsics in the anchor
+All proposed variants assume known camera intrinsics, but do not use calibrated scene-camera extrinsics at inference.
+The pose head predicts the scene-camera extrinsics in the world
 frame from RGB observations.  Predicted extrinsics and known intrinsics are then
 converted into dense Plucker ray maps for the policy input.  In the NVS variant,
 both source-view rays and target-view query rays are constructed from these
