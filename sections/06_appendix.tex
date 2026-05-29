@@ -62,8 +62,8 @@ schedule, 1k warmup steps, bf16 mixed precision, and EMA 0.9999.  Evaluation
 uses 10 tasks and 50 rollouts per task.
 
 \paragraph{MimicGen.}
-MimicGen policies use 12 random surround cameras per episode and a fixed-seed
-5\% demo holdout.  Rollout evaluation is run every 50k optimization steps under
+MimicGen policies use 12 random surround cameras per episode and a 5\% demo
+holdout.  Rollout evaluation is run every 50k optimization steps under
 both \texttt{train\_wide} and \texttt{eval\_tight}, with 40 rollouts for each
 camera setting.  The E2E camera-pose policies use 50\% episode-level pose
 labels in the reported runs.  The NVS variant uses 64 active scene tokens and

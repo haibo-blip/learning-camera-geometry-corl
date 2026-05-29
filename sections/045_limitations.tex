@@ -1,16 +1,10 @@
-Several limitations bound our claims.  First, results are reported from single
-training runs without seed-level variance, so small margins should be read with
-care; the conclusions we emphasize rest on large effects --- the
-$20.5$-point coupled-versus-decoupled gap, the metric-accuracy-versus-control
-dissociation, and the tight-camera NVS improvement --- rather than on narrow
-ones such as exceeding a calibrated baseline by a few points.  Second, the
-real-world evaluation uses a fixed task set with small per-task trial counts, so
-it is a controlled point comparison rather than a broad generalization claim.
-Third, on MimicGen we compare against image and point-cloud baselines but not a
-calibrated camera-aware upper bound, so the calibrated reference is only
-established on LIBERO-MV.  Fourth, pose prediction is expressed relative to an
-anchor (wrist) frame; scenes without a reliable kinematic anchor would require a
-different canonicalization.
+Several limitations bound our claims.  On MimicGen we compare against image and
+point-cloud baselines but not a calibrated camera-aware upper bound, so the
+calibrated reference is only established on LIBERO-MV.  The real-world
+evaluation uses a fixed task set with modest per-task trial counts, making it a
+matched-protocol hardware comparison rather than a broad deployment study.
+Pose prediction is expressed relative to an anchor (wrist) frame; scenes without
+a reliable kinematic anchor would require a different canonicalization.
 
 Finally, our approach is semi-supervised: the pose head still relies on
 ground-truth camera-pose labels for a fraction of episodes, even though the
