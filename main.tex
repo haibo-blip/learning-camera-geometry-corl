@@ -35,8 +35,9 @@ This formulation combines RGB data accessibility with explicit geometric
 conditioning.  On LIBERO-MV Spatial, our coupled camera-pose policy matches or
 exceeds policies conditioned on ground-truth camera rays or relative pose,
 despite predicting geometry from RGB.  On MimicGen, NVS improves over the
-action-only camera-pose policy by 13.1 train-camera points and 23.1 tight-camera
-points, and is competitive with a point-cloud policy without using depth.  On
+action-only camera-pose policy by 13.1\% on train-camera evaluation and 23.1\%
+under tight-camera evaluation, and is competitive with a point-cloud policy
+without using depth.  On
 real-world tabletop tasks, the NVS policy outperforms a decoupled
 calibration-free baseline and exceeds the calibrated Plucker-GT aggregate while
 using pose labels for only half of training episodes and no calibration at
