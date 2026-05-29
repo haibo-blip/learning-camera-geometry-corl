@@ -15,8 +15,9 @@ geometry interface changes.  In the calibrated references, \texttt{ViT+CamID}
 uses a learned camera identity with no metric geometry, \texttt{Plucker-GT}
 concatenates calibrated Plucker ray maps to RGB, and \texttt{PRoPE-GT} injects
 calibrated relative pose inside attention.  Our E2E camera-pose action policy
-keeps the same backbone and decoder but replaces calibrated pose input with an
-RGB pose predictor trained jointly with action prediction; unlabeled episodes
+keeps the same Plucker-ray interface as \texttt{Plucker-GT}, but constructs rays
+from RGB-predicted poses and trains the pose predictor jointly with action
+prediction; it does not use the PRoPE attention injection.  Unlabeled episodes
 contribute action loss but no pose loss.
 
 \paragraph{Pose-label sweep.}
@@ -33,7 +34,7 @@ analysis.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/libero_mv_spatial_summary.png}
-  \caption{LIBERO-MV Spatial summary. Left: calibrated references from the Camera-Aware Multi-View Visuomotor Policies protocol and the best E2E camera-pose action policy. Right: episode-level success as the fraction of camera-pose-labeled training episodes varies.}
+  \caption{LIBERO-MV Spatial summary. Left: calibrated references from the Camera-Aware Multi-View Visuomotor Policies protocol and the best E2E predicted-Plucker action policy. Right: episode-level success as the fraction of camera-pose-labeled training episodes varies.}
   \label{fig:libero}
 \end{figure}
 

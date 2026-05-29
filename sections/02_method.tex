@@ -59,6 +59,9 @@ an observation encoder:
 \begin{equation}
 z_t = f_\theta\left(\{I_{t,i}, P_{t,i}\}_{i=1}^{N}, q_t, c\right).
 \end{equation}
+This makes the variant a learned-pose counterpart of a Plucker-conditioned
+policy rather than a PRoPE-style attention model: predicted geometry enters as
+pixel-aligned Plucker maps before tokenization.
 An action expert \(g_\psi\) predicts the action chunk with a conditional
 flow-matching decoder; the standard flow-matching velocity objective
 \(\mathcal{L}_{\text{act}}\) is given in
