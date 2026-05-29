@@ -1,0 +1,24 @@
+Several limitations bound our claims.  First, results are reported from single
+training runs without seed-level variance, so small margins should be read with
+care; the conclusions we emphasize rest on large effects --- the
+$20.5$-point coupled-versus-decoupled gap, the metric-accuracy-versus-control
+dissociation, and the tight-camera NVS improvement --- rather than on narrow
+ones such as exceeding a calibrated baseline by a few points.  Second, the
+real-world evaluation uses a fixed task set with small per-task trial counts, so
+it is a controlled point comparison rather than a broad generalization claim.
+Third, on MimicGen we compare against image and point-cloud baselines but not a
+calibrated camera-aware upper bound, so the calibrated reference is only
+established on LIBERO-MV.  Fourth, pose prediction is expressed relative to an
+anchor (wrist) frame; scenes without a reliable kinematic anchor would require a
+different canonicalization.
+
+Finally, our approach is semi-supervised: the pose head still relies on
+ground-truth camera-pose labels for a fraction of episodes, even though the
+action and view-synthesis losses already supply self-supervised signal on the
+rest.  The view-synthesis objective is itself self-supervised and, like
+RayZer~\citep{jiang2025rayzer}, hints that pose could in principle be learned
+without any extrinsic labels.  We expect that adding stronger geometric
+regularization --- for example multi-view photometric or epipolar consistency
+across the predicted cameras --- could remove the remaining label dependency and
+push the policy toward a fully self-supervised camera-geometry regime.  We leave
+this extension to future work.

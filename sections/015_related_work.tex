@@ -1,0 +1,50 @@
+\paragraph{RGB visuomotor policies.}
+Modern imitation-learning policies map image observations and proprioception to
+action chunks with expressive generative decoders, including diffusion and
+flow-matching action experts~\citep{chi2023diffusionpolicy,yan2025maniflow}.
+These policies are strong action predictors but treat each image as raw
+appearance: camera geometry is implicit, so a fixed encoder can exploit
+view-specific cues that need not transfer when camera placement changes.  Our
+work keeps the RGB-policy interface but makes camera pose an explicit, learned
+latent inside the policy.
+
+\paragraph{Policies with 3D and geometric structure.}
+A complementary line builds geometric structure into the policy.  Point-cloud
+policies consume depth-lifted 3D inputs with modality-specific encoders: 3D
+Diffusion Policy~\citep{ze2024dp3} shows that compact 3D representations improve
+sample efficiency, and ManiFlow~\citep{yan2025maniflow} scales a point-cloud
+flow-matching policy across many tasks.  Other methods inject geometric priors
+through structure rather than explicit 3D inputs: Equivariant Diffusion
+Policy~\citep{wang2024equidiff} bakes $SO(2)/SO(3)$ symmetry into the denoiser
+for better sample efficiency and generalization, and Hierarchical Equivariant
+Policy~\citep{zhao2025hep} composes equivariant sub-policies through a learned
+frame-transfer hierarchy.  These approaches demonstrate the value of geometric
+structure, but they require depth and calibration (point-cloud methods) or
+assume a specific symmetry or kinematic decomposition.  We instead recover
+camera geometry from RGB inside the control objective, so the policy can still
+train on episodes without depth or extrinsic labels and reuse standard image
+backbones.
+
+\paragraph{Camera conditioning for RGB policies.}
+Recent camera-aware RGB policies expose geometry to the encoder through
+calibrated camera encodings.  Per-pixel Plucker ray maps concatenate ray origin
+and direction to RGB tokens~\citep{sitzmann2021lfn}, and attention-level
+encodings such as GTA and PRoPE inject relative camera pose inside
+self-attention~\citep{miyato2024gta,li2025prope}; calibrated multi-view policies
+use these signals for viewpoint
+generalization~\citep{anonymous2026cameraaware}.  All of these supply geometry
+as fixed metadata and assume known extrinsics at both training and test time.
+Our policies use the same Plucker ray encoding but build it from \emph{predicted}
+pose, removing the inference-time calibration requirement.
+
+\paragraph{View synthesis and camera-pose estimation.}
+Ray- and pose-conditioned transformers underpin recent view-synthesis models:
+set-latent scene representations~\citep{sajjadi2022srt}, large geometry-free
+view-synthesis transformers~\citep{jin2024lvsm}, and self-supervised,
+unposed-and-uncalibrated variants that predict cameras as a by-product of
+rendering~\citep{jiang2025rayzer}.  Pose can also be regressed directly from
+images, e.g.\ as ray bundles~\citep{zhang2024camerasasrays}.  We borrow the
+ray-map conditioning and set-latent scene tokens from this literature, but use
+target-view reconstruction only as a training-time regularizer that forces the
+scene representation to stay geometrically faithful for a control policy, rather
+than as the end task.
