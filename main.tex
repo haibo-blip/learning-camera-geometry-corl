@@ -20,22 +20,27 @@
 \maketitle
 
 \begin{abstract}
-RGB robot policies often leave camera geometry implicit, while calibrated ray,
-depth, and point-cloud policies require geometry that is unavailable for many
-demonstrations.  We study end-to-end camera-geometry learning for imitation:
-a pose head predicts camera extrinsics from RGB, differentiable Plucker ray
-construction feeds an action policy, and an optional scene-token NVS branch
-reconstructs target views from predicted-pose queries.  Ground-truth extrinsics
-supervise only a subset pose loss; unlabeled episodes still train through action
-loss and, for the NVS variant, view-synthesis loss.  On LIBERO-MV Spatial, using
-pose labels on 50\% of episodes yields 0.865 success, outperforming a fully
-supervised decoupled pose-then-policy baseline at 0.660.  Across the coupled
-label sweep, a 48$\times$ reduction in rotation error changes success by under
-five points.  On four MimicGen tasks, NVS improves over the action-only variant
-by 13.1 train-camera points and 23.1 tight-camera points.  On matched real-world
-tabletop tasks, the NVS policy outperforms a decoupled calibration-free baseline
-and exceeds the calibrated Plucker-GT aggregate while using pose labels for only
-half of training episodes and no calibration at inference.
+RGB visuomotor policies can train from ordinary images, but often learn
+view-specific shortcuts that weaken when camera placement changes.
+Geometry-aware policies expose rays, pose encodings, or point clouds, but
+typically require calibrated extrinsics, depth, or 3D-specific encoders, leaving
+many uncalibrated, depth-free demonstrations unusable for geometry-aware
+learning.  We learn camera geometry end-to-end inside the policy.  A pose head
+predicts extrinsics from RGB, differentiable Plucker ray construction conditions
+the action expert, and ground-truth poses supervise only a subset of episodes.
+Unlabeled episodes still train through action loss, and in our NVS variant also
+through target-view reconstruction from predicted-pose queries.
+
+This formulation combines RGB data accessibility with explicit geometric
+conditioning.  On LIBERO-MV Spatial, our coupled camera-pose policy matches or
+exceeds policies conditioned on ground-truth camera rays or relative pose,
+despite predicting geometry from RGB.  On MimicGen, NVS improves over the
+action-only camera-pose policy by 13.1 train-camera points and 23.1 tight-camera
+points, and is competitive with a point-cloud policy without using depth.  On
+real-world tabletop tasks, the NVS policy outperforms a decoupled
+calibration-free baseline and exceeds the calibrated Plucker-GT aggregate while
+using pose labels for only half of training episodes and no calibration at
+inference.
 \end{abstract}
 
 \keywords{End-to-end camera geometry learning, Visuomotor control, Novel view synthesis}
