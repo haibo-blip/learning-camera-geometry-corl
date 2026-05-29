@@ -36,8 +36,9 @@ We vary the fraction of pose-labeled training episodes over
 \(\{10,30,50,80,100\}\%\).  The labeled subset is selected by a deterministic
 episode-level split seed, and unlabeled episodes remain in the behavior-cloning
 dataset.  Fig.~\ref{fig:libero} shows two trends.  First, a small amount of pose
-supervision is already useful: the 10\% setting reaches a success rate close to
-the calibrated Plucker baseline.  Second, although our ray construction follows
+supervision is already useful: the 10\% setting already exceeds the calibrated
+Plucker baseline (0.820 vs.\ 0.622) and approaches the stronger calibrated PRoPE
+reference (0.842).  Second, although our ray construction follows
 the Plucker representation, and the calibrated Plucker baseline is weaker than
 PRoPE on Spatial, the best 50\% end-to-end setting exceeds the calibrated PRoPE
 reference.  This suggests that action loss can shape predicted geometry toward
