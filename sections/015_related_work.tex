@@ -8,22 +8,17 @@ view-specific cues that need not transfer when camera placement changes.  Our
 work keeps the RGB-policy interface but makes camera pose an explicit, learned
 latent inside the policy.
 
-\paragraph{Policies with 3D and geometric structure.}
-A complementary line builds geometric structure into the policy.  Point-cloud
-policies consume depth-lifted 3D inputs with modality-specific encoders: 3D
-Diffusion Policy~\citep{ze2024dp3} shows that compact 3D representations improve
-sample efficiency, and ManiFlow~\citep{yan2025maniflow} scales a point-cloud
-flow-matching policy across many tasks.  Other methods inject geometric priors
-through structure rather than explicit 3D inputs: Equivariant Diffusion
-Policy~\citep{wang2024equidiff} bakes $SO(2)/SO(3)$ symmetry into the denoiser
-for better sample efficiency and generalization, and Hierarchical Equivariant
-Policy~\citep{zhao2025hep} composes equivariant sub-policies through a learned
-frame-transfer hierarchy.  These approaches demonstrate the value of geometric
-structure, but they require depth and calibration (point-cloud methods) or
-assume a specific symmetry or kinematic decomposition.  We instead recover
-camera geometry from RGB inside the control objective, so the policy can still
-train on episodes without depth or extrinsic labels and reuse standard image
-backbones.
+\paragraph{Policies with 3D representations.}
+A complementary line equips the policy with explicit 3D representations such as
+voxel grids or point
+clouds~\citep{ze2024dp3,yan2025maniflow,wang2024equidiff,zhao2025hep}.  These
+provide strong spatial structure, but share three costs.  They require camera
+calibration and depth sensing to construct the 3D input; depth is unreliable on
+transparent or reflective objects, so the representation degrades exactly where
+appearance reasoning is already hard; and fidelity scales with voxel or point
+resolution, which drives up compute and memory.  We instead keep 2D RGB and
+standard image backbones and recover camera geometry inside the control
+objective, so the policy needs neither depth nor calibration at inference.
 
 \paragraph{Camera conditioning for RGB policies.}
 Recent camera-aware RGB policies expose geometry to the encoder through
