@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "pipeline.png"
 ASSETS = ROOT / "pipeline_assets"
 
-W, H = 3200, 1540
+W, H = 3200, 1600
 FONT = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
 BOLD = Path("/System/Library/Fonts/Supplemental/Arial Bold.ttf")
 BLACK = Path("/System/Library/Fonts/Supplemental/Arial Black.ttf")
@@ -320,18 +320,18 @@ def main():
     d.text((58, 42), "End-to-end camera-pose policy variants", font=F_TITLE, fill=C_TEXT)
     d.text((62, 124), "Each model predicts camera pose inside the policy; action and NVS losses train the geometry module jointly with the encoder.", font=F_SUB, fill=C_MUTED)
 
-    left = (46, 190, 820, 1476)
-    right = (850, 190, 3154, 1476)
+    left = (46, 190, 820, 1536)
+    right = (850, 190, 3154, 1536)
     shadowed_panel(left)
     shadowed_panel(right)
     d.text((88, 238), "Scene + input views", font=F_PANEL, fill=C_TEXT)
     d.text((902, 238), "Model variants", font=F_PANEL, fill=C_TEXT)
 
-    rounded((88, 318, 778, 860), r=22, fill="#fbfdff", outline=C_LINE, width=3)
-    paste_cover(scene_crop, (112, 346, 754, 832), radius=16)
+    rounded((88, 318, 778, 910), r=22, fill="#fbfdff", outline=C_LINE, width=3)
+    paste_cover(scene_crop, (112, 346, 754, 882), radius=16)
     for box, label, col, im in [
-        ((88, 940, 420, 1448), "View A", C_TEAL, view_a),
-        ((448, 940, 778, 1448), "View B", C_RED, view_b),
+        ((88, 1010, 420, 1510), "View A", C_TEAL, view_a),
+        ((448, 1010, 778, 1510), "View B", C_RED, view_b),
     ]:
         rounded(box, r=20, fill="#fbfdff", outline=C_LINE, width=3)
         x0, y0, x1, y1 = box
@@ -361,44 +361,46 @@ def main():
             rounded((x0 - 18, aux_y, x1 + 18, aux_y + 84), r=12, fill="white", outline=C_PURPLE, width=3)
             text_multiline_fit_center(((x0 + x1) / 2, aux_y + 43), "semi-supervised\npose loss", 31, (x1 - x0) + 10, fill=C_PURPLE, bold=True)
 
-    shared = (895, 320, 2070, 778)
-    rounded(shared, r=22, fill="#f7fbff", outline=C_LINE, width=3)
-    d.text((940, 374), "Shared camera-pose front end", font=F_BAND, fill=C_TEXT)
-    rgb_views_card((940, 450, 1276, 740))
-    pose_block((1350, 520, 1574, 670), aux_y=684)
-    ray_maps_card((1650, 450, 2020, 740))
-    arrow([(1276, 595), (1350, 595)], color=C_PURPLE, width=9)
-    arrow([(1574, 595), (1650, 595)], color=C_BLUE, width=9)
-
-    band_a = (2100, 320, 3110, 778)
+    band_a = (895, 320, 3110, 820)
     rounded(band_a, r=22, fill=C_GREEN_FILL, outline=C_GREEN_STROKE, width=3)
-    d.text((2142, 374), "A  action policy branch", font=F_BAND, fill=C_TEAL_DARK)
-    node((2140, 520, 2414, 670), "Observation", "encoder", stroke="#35ad67", fill="white", title_size=39)
-    node((2494, 520, 2724, 670), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=41)
-    labeled_tile(action_crop, (2790, 478, 3056, 706), "action\nobjective", C_ORANGE, label_size=34, image_frac=0.62)
-    arrow([(2020, 595), (2140, 595)], color=C_TEAL, width=9)
-    arrow([(2414, 595), (2494, 595)], color=C_ORANGE, width=9)
-    arrow([(2724, 595), (2790, 595)], color=C_ORANGE, width=9)
+    d.text((940, 374), "A  E2E camera-pose action policy", font=F_BAND, fill=C_TEAL_DARK)
+    rgb_views_card((940, 452, 1276, 748))
+    pose_block((1350, 528, 1574, 678), aux_y=714)
+    ray_maps_card((1650, 452, 2020, 748))
+    node((2100, 528, 2374, 678), "Observation", "encoder", stroke="#35ad67", fill="white", title_size=39)
+    node((2454, 528, 2684, 678), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=41)
+    labeled_tile(action_crop, (2760, 444, 3026, 752), "action\nobjective", C_ORANGE, label_size=34, image_frac=0.66)
+    arrow([(1276, 600), (1350, 600)], color=C_PURPLE, width=9)
+    arrow([(1574, 600), (1650, 600)], color=C_BLUE, width=9)
+    arrow([(2020, 600), (2100, 600)], color=C_TEAL, width=9)
+    arrow([(2374, 600), (2454, 600)], color=C_ORANGE, width=9)
+    arrow([(2684, 600), (2760, 600)], color=C_ORANGE, width=9)
 
-    band_b = (895, 830, 3110, 1454)
+    band_b = (895, 885, 3110, 1512)
     rounded(band_b, r=22, fill=C_CYAN_FILL, outline=C_CYAN_STROKE, width=3)
-    d.text((940, 874), "B  E2E camera-pose NVS policy", font=F_BAND, fill=C_TEAL_DARK)
-    node((1770, 1040, 2064, 1190), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=38)
-    scene_token_glyph((1826, 906, 2006, 1030), "scene token", label_size=27)
-    scene_token_glyph((2150, 1040, 2330, 1190), "updated\nscene token", label_size=31)
-    labeled_tile(ray_b, (2142, 904, 2354, 1032), "target ray\nquery", C_RED, label_color=C_RED, label_size=27, image_frac=0.48)
-    node((2424, 940, 2608, 1080), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=41)
-    labeled_tile(view_b, (2674, 898, 2836, 1120), "NVS\nobjective", C_RED, label_size=27, image_frac=0.54)
-    node((2424, 1260, 2608, 1392), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=37)
-    labeled_tile(action_crop, (2674, 1248, 2836, 1450), "action\nobjective", C_ORANGE, label_size=25, image_frac=0.51)
-    arrow([(2020, 595), (2044, 595), (2044, 838), (1708, 838), (1708, 1114), (1770, 1114)], color=C_TEAL, width=6, head=20)
-    arrow([(1916, 1030), (1916, 1040)], color=C_TEAL, width=8, head=18)
-    arrow([(2064, 1114), (2150, 1114)], color=C_TEAL, width=9)
-    arrow([(2330, 1114), (2376, 1114), (2376, 1010), (2424, 1010)], color=C_BLUE, width=8)
-    arrow([(2354, 968), (2424, 968)], color=C_RED, width=8, head=20)
-    arrow([(2608, 1010), (2674, 1010)], color=C_RED, width=8)
-    arrow([(2330, 1164), (2376, 1164), (2376, 1326), (2424, 1326)], color=C_ORANGE, width=8)
-    arrow([(2608, 1326), (2674, 1326)], color=C_ORANGE, width=8)
+    d.text((940, 942), "B  E2E camera-pose NVS policy", font=F_BAND, fill=C_TEAL_DARK)
+    rgb_views_card((940, 1014, 1276, 1304))
+    pose_block((1350, 1084, 1574, 1234), aux_y=1272)
+    ray_maps_card((1650, 1014, 2020, 1304))
+    arrow([(1276, 1158), (1350, 1158)], color=C_PURPLE, width=9)
+    arrow([(1574, 1158), (1650, 1158)], color=C_BLUE, width=9)
+
+    node((2072, 1078, 2366, 1234), "Scene-token", "encoder", stroke=C_TEAL, fill="white", title_size=38)
+    scene_token_glyph((2130, 928, 2310, 1064), "scene token", label_size=29)
+    scene_token_glyph((2428, 1076, 2608, 1232), "updated\nscene token", label_size=31)
+    labeled_tile(ray_b, (2422, 928, 2632, 1068), "target ray\nquery", C_RED, label_color=C_RED, label_size=28, image_frac=0.48)
+    node((2700, 960, 2884, 1108), "NVS", "decoder", stroke=C_BLUE, fill="#eef9ff", title_size=41)
+    labeled_tile(view_b, (2934, 922, 3096, 1148), "NVS\nobjective", C_RED, label_size=28, image_frac=0.54)
+    node((2700, 1270, 2884, 1418), "Action", "expert", stroke=C_ORANGE, fill=C_ORANGE_FILL, title_size=39)
+    labeled_tile(action_crop, (2934, 1228, 3096, 1454), "action\nobjective", C_ORANGE, label_size=28, image_frac=0.54)
+    arrow([(2020, 1158), (2072, 1158)], color=C_TEAL, width=9)
+    arrow([(2220, 1064), (2220, 1078)], color=C_TEAL, width=8, head=18)
+    arrow([(2366, 1156), (2428, 1156)], color=C_TEAL, width=9)
+    arrow([(2608, 1188), (2652, 1188), (2652, 1034), (2700, 1034)], color=C_BLUE, width=8)
+    arrow([(2632, 998), (2700, 998)], color=C_RED, width=8, head=20)
+    arrow([(2884, 1034), (2934, 1034)], color=C_RED, width=8)
+    arrow([(2608, 1220), (2652, 1220), (2652, 1344), (2700, 1344)], color=C_ORANGE, width=8)
+    arrow([(2884, 1344), (2934, 1344)], color=C_ORANGE, width=8)
 
     img.save(OUT, quality=98)
 
