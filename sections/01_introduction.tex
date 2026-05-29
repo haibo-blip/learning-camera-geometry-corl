@@ -17,9 +17,9 @@ extrinsics from RGB, differentiable ray construction converts the predictions
 into per-pixel Plucker features, and the entire policy is trained end-to-end
 from RGB to actions.  Only a subset of training episodes needs pose labels; the
 remaining episodes can still shape camera-pose learning through the action loss.
-In the NVS variant, target-view queries are also built from predicted poses, so
-unlabeled episodes additionally provide view-synthesis supervision through their
-RGB targets.  \autoref{fig:pipeline} summarizes the action-only and
+In our novel-view synthesis (NVS) variant, target-view queries are also built
+from predicted poses, so unlabeled episodes additionally provide view-synthesis
+supervision through their RGB targets.  \autoref{fig:pipeline} summarizes the action-only and
 NVS-regularized variants, while \autoref{fig:overview} illustrates the training
 signals.
 
