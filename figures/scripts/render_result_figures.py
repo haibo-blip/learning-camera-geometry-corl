@@ -5,6 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Rectangle
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,7 @@ COLORS = {
     "pose": "#7C5CC4",
     "action": "#17997F",
     "nvs": "#D97706",
+    "gt": "#C73E1D",
     "grid": "#D9E0EA",
     "text": "#1F2937",
 }
@@ -136,18 +138,6 @@ def render_mimicgen() -> None:
     for ax, metric in zip(axes, ["train_success", "tight_success"]):
         ax.axvspan(x[-1] - 0.52, x[-1] + 0.52, color="#F3F6FA", zorder=0)
         ax.axvline((x[-2] + x[-1]) / 2, color=COLORS["grid"], linestyle="--", linewidth=1.4, zorder=1)
-        ax.text(
-            0.02,
-            0.965,
-            "hatched ManiFlow = GT extrinsics",
-            transform=ax.transAxes,
-            ha="left",
-            va="top",
-            fontsize=9.2,
-            color=COLORS["geometry"],
-            fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor=COLORS["geometry"], linewidth=1.0, alpha=0.94),
-        )
         for mi, (method, label, color, hatch) in enumerate(methods):
             task_vals = []
             for task in tasks:
@@ -194,9 +184,42 @@ def render_mimicgen() -> None:
         ax.grid(axis="x", visible=False)
 
     axes[0].set_ylabel("Episode success rate (%)")
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 1.11), fontsize=9.8, columnspacing=1.1, handlelength=1.6)
-    fig.tight_layout(w_pad=2.4)
+    fig.tight_layout(rect=(0, 0, 1, 0.87), w_pad=2.4)
+
+    legend_ax = fig.add_axes([0.045, 0.885, 0.91, 0.105])
+    legend_ax.set_axis_off()
+    legend_ax.set_xlim(0, 1)
+    legend_ax.set_ylim(0, 1)
+    legend_items = [
+        (0.02, COLORS["image"], None, "Diffusion Policy", "(image)", COLORS["text"], "normal"),
+        (0.25, COLORS["action"], None, "E2E camera-pose", "action policy", COLORS["text"], "normal"),
+        (0.49, COLORS["nvs"], None, "E2E camera-pose", "NVS policy", COLORS["text"], "normal"),
+        (0.73, COLORS["geometry"], "////", "ManiFlow (point cloud)", "GT extrinsics", COLORS["gt"], "bold"),
+    ]
+    for x0, color, hatch, line1, line2, line2_color, line2_weight in legend_items:
+        legend_ax.add_patch(
+            Rectangle(
+                (x0, 0.37),
+                0.027,
+                0.26,
+                facecolor=color,
+                edgecolor=COLORS["text"] if hatch else "white",
+                linewidth=0.9 if hatch else 0.6,
+                hatch=hatch,
+                alpha=0.76 if hatch else 0.88,
+            )
+        )
+        legend_ax.text(x0 + 0.038, 0.64, line1, ha="left", va="center", fontsize=9.7, color=COLORS["text"])
+        legend_ax.text(
+            x0 + 0.038,
+            0.30,
+            line2,
+            ha="left",
+            va="center",
+            fontsize=9.7,
+            color=line2_color,
+            fontweight=line2_weight,
+        )
     save(fig, "mimicgen_multitask_results")
 
 
