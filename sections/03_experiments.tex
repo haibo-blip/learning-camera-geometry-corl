@@ -121,8 +121,11 @@ split seed and train on the remaining demos.
 During training, input cameras are sampled from the \texttt{train\_wide}
 distribution illustrated in Fig.~\ref{fig:overview}.  We launch rollout
 evaluation every 50k optimization steps on two camera settings: the same
-\texttt{train\_wide} distribution used for training, and a different, tighter
-held-out distribution, \texttt{eval\_tight}.  Each evaluation uses 40 rollouts
+\texttt{train\_wide} distribution used for training, and a held-out
+\texttt{eval\_tight} distribution that draws the surround cameras from a
+narrower angular spread clustered closer to a frontal band rather than the full
+upper hemisphere (Fig.~\ref{fig:overview}), so the policy must transfer to
+viewpoints outside the training distribution.  Each evaluation uses 40 rollouts
 per camera setting.  This separates in-distribution policy learning from
 camera-distribution transfer.
 

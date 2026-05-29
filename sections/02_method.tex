@@ -23,7 +23,12 @@ condition \(c\) such as a language embedding.  It predicts an action chunk
 \(A_t=\{a_t,\ldots,a_{t+H-1}\}\in\mathbb{R}^{H\times d_a}\).  In our
 implementation \(H=32\) and each action contains end-effector translation,
 6D rotation, and gripper command.  Camera \(i\) has intrinsics \(K_i\) and an
-extrinsic transform \(T_{t,i}\in SE(3)\).  We do not assume that \(T_{t,i}\)
+extrinsic transform \(T_{t,i}\in SE(3)\), expressed relative to an anchor frame
+(in our setup the wrist camera, whose transform is known from robot
+kinematics); the pose head predicts each remaining camera in this anchor frame.
+``No calibration at inference'' therefore means no calibrated scene-camera
+extrinsics --- a known kinematic anchor is still assumed, as in calibrated
+multi-view baselines.  We do not assume that \(T_{t,i}\)
 is available for every training episode.  Pose annotation is assigned at the
 episode level: for episode \(e\), a binary mask \(m_e\in\{0,1\}\) indicates
 whether all camera poses in that episode are labeled.  The label ratio
@@ -129,12 +134,10 @@ tokens are discarded and only the active scene tokens are retained.  The NVS
 branch therefore decodes from a latent scene-token bottleneck rather than
 directly from the full source patch sequence.  We use \(M=64\) active scene
 tokens.  The action expert uses these tokens together
-with proprioception and task conditioning:
-\begin{equation}
-z_t^{\text{scene}} = \text{concat}(R_t, q_t, c), \qquad
-\mathcal{L}_{\text{act}} =
-\mathcal{L}_{\text{flow}}(g_\psi, z_t^{\text{scene}}, A_t).
-\end{equation}
+with proprioception and task conditioning,
+\(z_t^{\text{scene}} = \text{concat}(R_t, q_t, c)\), and is trained with the same
+flow-matching action loss \(\mathcal{L}_{\text{act}}\) as the action-only
+variant, now conditioned on \(z_t^{\text{scene}}\).
 
 For the NVS objective, we randomly select a target view \(j\) and build its
 query rays from the \emph{predicted} target pose \(\hat{T}_{t,j}\) --- the same
@@ -145,7 +148,9 @@ camera-extrinsic labels: the target's RGB image is the only supervision it
 needs, which is what lets episodes without pose labels still contribute NVS
 gradients.
 To prevent trivial copying, the target view's encoder input is masked with
-probability \(p_{\text{drop}}\), so the decoder must reconstruct the target
+probability \(p_{\text{drop}}\) (set to 0.6, high enough that the decoder
+usually cannot see the target and must instead use the other views' scene
+evidence), so the decoder must reconstruct the target
 image from the remaining scene evidence stored in the scene tokens.  The NVS
 decoder \(D_\omega\) patchifies the target-view ray map, uses those target-ray
 tokens as queries, and cross-attends only to the retained scene tokens:
