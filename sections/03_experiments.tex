@@ -87,12 +87,14 @@ point-cloud methods in every shifted-camera regime.
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/mimicgen_multitask_results.png}
-  \caption{MimicGen results. Left and right panels report episode-level success
-  rates under the train-camera and tight-camera camera distributions; the shaded
-  Mean group is the macro-average over the four displayed tasks. Diffusion Policy
-  is an image baseline, ManiFlow is the point-cloud baseline with access to
-  ground-truth camera extrinsics, and the two E2E variants match the model names
-  in \autoref{fig:pipeline}.}
+  \caption{MimicGen results. For each method and task, a single model is trained
+  on the train-camera distribution and then evaluated under two camera
+  distributions: the train-camera distribution (left) and a held-out
+  tight-camera distribution (right).  The shaded Mean group is the
+  macro-average over the four displayed tasks. Diffusion Policy is an image
+  baseline, ManiFlow is the point-cloud baseline with access to ground-truth
+  camera extrinsics, and the two E2E variants match the model names in
+  \autoref{fig:pipeline}.}
   \label{fig:mimicgen-results}
 \end{figure}
 
