@@ -13,9 +13,7 @@ At time \(t\), the policy observes \(N\) RGB views
 \(\mathcal{I}_t=\{I_{t,i}\}_{i=1}^{N}\), proprioception \(q_t\), and task
 condition \(c\), and predicts an action chunk \(A_t\).  Camera \(i\) has known
 intrinsics \(K_i\) and an extrinsic transform \(T_{t,i}\in SE(3)\) expressed in
-an anchor frame.  ``No calibration at inference'' means no calibrated
-scene-camera extrinsics; a known kinematic anchor is still assumed, as in the
-calibrated multi-view baselines.  Training poses are episode-level labels: a
+an world frame.  Training poses are episode-level labels: a
 binary mask \(m_e\in\{0,1\}\) indicates whether episode \(e\) provides camera
 poses, and the label ratio \(\rho\) is the fraction of labeled episodes.
 
