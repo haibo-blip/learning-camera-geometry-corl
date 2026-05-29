@@ -33,10 +33,13 @@ camera-to-world transform from RGB, the predicted transforms are converted into
 per-pixel ray features, and the downstream policy is trained end-to-end through
 these features.  Camera-pose labels are only required for a selected subset of
 training episodes; all episodes still provide action supervision and can pass
-gradients through the predicted geometry.  The central question is therefore not
+gradients through the predicted geometry.  In the NVS variant, the target-view
+query rays are also constructed from the pose predictor rather than from
+ground-truth extrinsics, so an unlabeled episode can still provide view-synthesis
+supervision through its RGB target image.  The central question is therefore not
 whether a standalone pose head is metrically optimal, but whether partial pose
-supervision plus task loss can turn unlabeled camera episodes into useful
-training signal for control.
+supervision plus task and reconstruction losses can turn unlabeled camera
+episodes into useful training signal for control.
 
 We study two model variants, summarized in Fig.~\ref{fig:pipeline}: an
 action-only camera-pose policy and an NVS-regularized policy.  Both predict

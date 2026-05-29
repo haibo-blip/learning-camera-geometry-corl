@@ -127,7 +127,10 @@ narrower angular spread clustered closer to a frontal band rather than the full
 upper hemisphere (Fig.~\ref{fig:overview}), so the policy must transfer to
 viewpoints outside the training distribution.  Each evaluation uses 40 rollouts
 per camera setting.  This separates in-distribution policy learning from
-camera-distribution transfer.
+camera-distribution transfer.  Checkpoint selection is validation-based: for
+each run, we select the best validation checkpoint available before training
+finishes or is stopped, and report the corresponding train-camera and
+tight-camera rollout success at that checkpoint.
 
 \paragraph{Methods and inputs.}
 We compare against Diffusion Policy~\citep{chi2023diffusionpolicy} as the image
@@ -136,8 +139,8 @@ follow the original hyperparameters as closely as possible for both baselines;
 for ManiFlow, we use 1024 points to provide a higher-resolution point-cloud
 input.  The two proposed methods are the E2E camera-pose action policy and the
 E2E camera-pose NVS policy described in the Method section and
-Fig.~\ref{fig:pipeline}; implementation hyperparameters are deferred to the
-appendix.
+Fig.~\ref{fig:pipeline}; implementation hyperparameters and rollout-reporting
+details are summarized in \autoref{sec:appendix-implementation}.
 
 \paragraph{Results.}
 Fig.~\ref{fig:mimicgen-results} reports the four-task result set.  The
@@ -195,7 +198,9 @@ the same robot platform, the same wrist-plus-two-surround camera rig, and the
 identical per-task rubrics, trial counts, and success definitions, and differ
 only in how camera geometry is obtained.  The Plucker-GT and Plucker-RayZer
 reference numbers are the calibrated and decoupled baselines evaluated under this
-protocol on the same hardware~\citep{anonymous2026cameraaware}.  The calibrated Plucker-GT reference
+protocol on the same hardware~\citep{anonymous2026cameraaware}.  Thus the
+comparison is not a cross-paper mix of different hardware, tasks, or scoring
+rules.  The calibrated Plucker-GT reference
 consumes scene-camera extrinsics on every episode at both training and test
 time; the decoupled Plucker-RayZer reference predicts pose at inference from a
 separately trained pose head plugged into a frozen policy; our E2E camera-pose

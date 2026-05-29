@@ -5,6 +5,32 @@ patch size 16.  The action expert is a flow-matching DiT with hidden size 384,
 8 layers, and 6 attention heads.  Policies predict 32-step action chunks and
 execute actions with an 8-step replanning interval in simulation.
 
+\paragraph{Pose and ray construction.}
+All proposed variants assume known camera intrinsics and a known kinematic
+anchor frame, but do not use calibrated scene-camera extrinsics at inference.
+The pose head predicts the non-anchor scene-camera extrinsics in the anchor
+frame from RGB observations.  Predicted extrinsics and known intrinsics are then
+converted into dense Plucker ray maps for the policy input.  In the NVS variant,
+both source-view rays and target-view query rays are constructed from these
+predicted poses; ground-truth extrinsics are never fed to the policy or NVS
+decoder.  They are used only to compute \(\mathcal{L}_{\text{pose}}\) on the
+episode subset selected for pose supervision.  Unlabeled episodes therefore
+still contribute action loss, and in the NVS variant they also contribute
+view-synthesis loss through their RGB target images.
+
+\paragraph{Auxiliary losses and NVS training.}
+The action-only policy optimizes \(\mathcal{L}_{\text{act}}+
+\lambda_{\text{pose}}\mathcal{L}_{\text{pose}}\).  The NVS policy adds
+\(\lambda_{\text{nvs}}\mathcal{L}_{\text{nvs}}\), where
+\(\mathcal{L}_{\text{nvs}}\) combines pixel MSE with LPIPS at \(\beta=0.5\).
+For each NVS training example, one available view is sampled as the target.  Its
+RGB image is the reconstruction target, while its predicted ray map is used as
+the decoder query.  The target observation is dropped from the scene-token
+encoder input with probability \(p_{\text{drop}}=0.6\); when dropped, the scene
+tokens must reconstruct the target view from the remaining source observations.
+This dropout is used only for the NVS branch and is not used by the
+action-only E2E policy.
+
 \paragraph{LIBERO-MV Spatial.}
 LIBERO-MV experiments follow the setup of Camera-Aware Multi-View Visuomotor
 Policies~\citep{anonymous2026cameraaware}: two random surround views
@@ -22,6 +48,14 @@ labels in the reported runs.  The NVS variant uses 64 active scene tokens and
 target-observation dropout probability 0.6 during NVS training.  Diffusion
 Policy and ManiFlow use their original training recipes as closely as possible;
 ManiFlow uses 1024 point-cloud points.
+
+\paragraph{Checkpoint selection and reporting.}
+For MimicGen, each saved evaluation point runs rollouts on the training camera
+distribution and on the tighter held-out camera distribution.  The paper reports
+the checkpoint with the best validation rollout success observed before the run
+finished or was stopped.  Reported train-camera and tight-camera success rates
+come from the same selected checkpoint, rather than from separately selecting a
+best checkpoint for each camera setting.
 
 \paragraph{Real-World Tabletop.}
 The real-world E2E camera-pose NVS policy uses 50\% episode-level pose labels

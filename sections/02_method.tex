@@ -8,10 +8,11 @@ Fig.~\ref{fig:pipeline}, we instantiate this idea in two variants.  The
 \emph{E2E camera-pose action policy} feeds RGB and predicted ray features into
 an observation encoder and trains an action expert by behavior cloning.  The
 \emph{E2E camera-pose NVS policy} uses a separate scene-token encoder and adds a
-training-time novel-view synthesis objective.  Given a target camera query, an
-NVS decoder reconstructs the target view from the scene tokens, following the
-view-synthesis idea that renderable latent representations must preserve object
-layout, occlusion, and camera geometry~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.
+training-time novel-view synthesis objective.  Given a target camera query built
+from the pose head's predicted target pose, an NVS decoder reconstructs the
+target view from the scene tokens, following the view-synthesis idea that
+renderable latent representations must preserve object layout, occlusion, and
+camera geometry~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}.
 The decoder is discarded at inference; its role is to regularize the policy
 representation during training.
 
@@ -179,6 +180,8 @@ the pose head, scene-token observation encoder, and action expert, but it discar
 the reconstruction head.  This preserves the end-to-end action policy interface:
 the robot receives only RGB, proprioception, and task conditioning, while camera
 geometry is inferred internally.
+Implementation and checkpoint-selection details are summarized in
+\autoref{sec:appendix-implementation}.
 
 \begin{figure}[t]
     \centering
