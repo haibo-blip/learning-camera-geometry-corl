@@ -56,6 +56,37 @@ are logged from held-out visualization rollouts.
   \end{tabular}}
 \end{table}
 
+\section{LIBERO-MV Pose Accuracy vs.\ Label Ratio}
+
+Table~\ref{tab:appendix-pose-sweep} reports the converged camera-pose error of
+the coupled E2E policy at each label ratio of the LIBERO-MV Spatial sweep,
+alongside the decoupled supervised-only pose head, with the corresponding task
+success.  Each error is averaged over the last logged evaluation points.  Pose
+error falls monotonically with more labels and is lowest for the decoupled head,
+but task success is essentially flat across the coupled runs and lowest for the
+decoupled head --- metric pose accuracy does not track control performance.
+
+\begin{table}[ht]
+  \centering
+  \caption{Converged pose accuracy and Spatial success vs.\ pose-label ratio on
+  LIBERO-MV. The decoupled supervised-only pose head is the most accurate yet
+  yields the lowest success.}
+  \label{tab:appendix-pose-sweep}
+  \begin{tabular}{lccc}
+    \toprule
+    Pose labels & Rot. err.\ (deg)\,$\downarrow$ & Trans. err.\ (m)\,$\downarrow$ & Spatial success\,$\uparrow$ \\
+    \midrule
+    10\%  & 7.634 & 0.1816 & 0.820 \\
+    30\%  & 4.063 & 0.1181 & 0.775 \\
+    50\%  & 2.422 & 0.0710 & \textbf{0.865} \\
+    80\%  & 1.433 & 0.0537 & 0.780 \\
+    100\% & 0.334 & 0.00576 & 0.860 \\
+    \midrule
+    Decoupled (supervised only) & \textbf{0.159} & \textbf{0.0040} & 0.660 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \clearpage
 \section{Novel-View Synthesis Quality}
 
