@@ -225,38 +225,62 @@ def scene_token_glyph(box, label, stroke=C_TEAL, fill="#def7e3", label_size=22):
 
 def plucker(size=(330, 185), phase=0.0):
     w, h = size
-    xx = np.linspace(0, 1, w)[None, :]
-    yy = np.linspace(0, 1, h)[:, None]
-    hue = (0.62 * xx + 0.26 * (1 - yy) + phase) % 1.0
-    sat = np.broadcast_to(0.78 + 0.12 * np.sin(2 * np.pi * (xx + yy)), (h, w))
-    val = np.broadcast_to(0.96 - 0.10 * yy, (h, w))
+    yy, xx = np.mgrid[0:h, 0:w]
+    cx = w * (0.50 + 0.018 * math.sin(phase * 11.0))
+    cy = h * (0.52 + 0.014 * math.cos(phase * 13.0))
+    nx = (xx - cx) / max(1.0, w * 0.5)
+    ny = (yy - cy) / max(1.0, h * 0.5)
+    radius = np.clip(np.sqrt(nx * nx + ny * ny), 0.0, 1.2)
+    angle = np.arctan2(ny, nx)
+    hue = (angle / (2 * np.pi) + 0.58 + phase * 0.23) % 1.0
+    sat = np.clip(0.58 + 0.34 * radius, 0.0, 1.0)
+    val = np.clip(0.98 - 0.16 * radius + 0.035 * np.cos(18.0 * radius - phase * 8.0), 0.0, 1.0)
     arr = np.zeros((h, w, 3), dtype=np.uint8)
     for y in range(h):
         for x in range(w):
             r, g, b = colorsys.hsv_to_rgb(float(hue[y, x]), float(sat[y, x]), float(val[y, x]))
             arr[y, x] = (int(r * 255), int(g * 255), int(b * 255))
     out = Image.fromarray(arr, "RGB")
-    od = ImageDraw.Draw(out)
-    for gx in range(0, w, 38):
-        od.line((gx, 0, gx, h), fill=(255, 255, 255), width=2)
-    for gy in range(0, h, 38):
-        od.line((0, gy, w, gy), fill=(255, 255, 255), width=2)
-    for y in range(24, h, 38):
-        for x in range(24, w, 46):
-            ang = -0.55 + 1.25 * (x / w) + 0.25 * math.sin(y * 0.05 + phase * 3)
-            length = 16
-            x2 = x + length * math.cos(ang)
-            y2 = y + length * math.sin(ang)
-            od.line((x, y, x2, y2), fill=(35, 45, 60), width=2)
-            od.polygon(
-                [
-                    (x2, y2),
-                    (x2 - 5 * math.cos(ang - 0.55), y2 - 5 * math.sin(ang - 0.55)),
-                    (x2 - 5 * math.cos(ang + 0.55), y2 - 5 * math.sin(ang + 0.55)),
-                ],
-                fill=(35, 45, 60),
-            )
-    return out
+    layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    od = ImageDraw.Draw(layer)
+
+    # Perspective-style ray map: all pixel rays share the same camera center and
+    # fan outward to image-plane directions.
+    max_r = int(math.hypot(w, h))
+    for frac in (0.24, 0.48, 0.72, 0.96):
+        rx = max_r * frac * 0.50
+        ry = max_r * frac * 0.32
+        od.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), outline=(255, 255, 255, 78), width=2)
+
+    def edge_point(theta, margin=7):
+        c, s = math.cos(theta), math.sin(theta)
+        ts = []
+        if abs(c) > 1e-5:
+            ts.append(((w - margin - cx) / c) if c > 0 else ((margin - cx) / c))
+        if abs(s) > 1e-5:
+            ts.append(((h - margin - cy) / s) if s > 0 else ((margin - cy) / s))
+        t = min(t for t in ts if t > 0)
+        return cx + t * c, cy + t * s
+
+    ray_count = 22
+    for i in range(ray_count):
+        theta = 2 * math.pi * i / ray_count + phase * 1.7
+        ex, ey = edge_point(theta)
+        rr, gg, bb = colorsys.hsv_to_rgb((theta / (2 * math.pi) + 0.58 + phase * 0.23) % 1.0, 0.82, 0.55)
+        col = (int(rr * 255), int(gg * 255), int(bb * 255), 178)
+        width = 3 if w >= 300 else 2
+        od.line((cx, cy, ex, ey), fill=col, width=width)
+        ux, uy = math.cos(theta), math.sin(theta)
+        px, py = -uy, ux
+        head = max(8, min(w, h) * 0.055)
+        tip = (ex, ey)
+        p1 = (ex - ux * head + px * head * 0.44, ey - uy * head + py * head * 0.44)
+        p2 = (ex - ux * head - px * head * 0.44, ey - uy * head - py * head * 0.44)
+        od.polygon((tip, p1, p2), fill=col)
+
+    od.ellipse((cx - 9, cy - 9, cx + 9, cy + 9), fill=(255, 255, 255, 245), outline=(30, 42, 58, 220), width=3)
+    od.ellipse((cx - 3, cy - 3, cx + 3, cy + 3), fill=(30, 42, 58, 235))
+    return Image.alpha_composite(out.convert("RGBA"), layer).convert("RGB")
 
 
 def main():
