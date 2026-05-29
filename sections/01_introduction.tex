@@ -16,12 +16,14 @@ encoders.
 We ask whether camera geometry can be learned inside the control objective
 instead of provided as fixed metadata.  A pose predictor estimates camera
 extrinsics from RGB, differentiable ray construction converts the predictions
-into per-pixel Plucker features, and the policy is trained end-to-end through
-those features.  Pose labels are needed only for selected training episodes.
+into per-pixel Plucker features, and the entire policy is trained end-to-end
+from RGB to actions.  Only a subset of training episodes needs pose labels; the
+remaining episodes can still shape camera-pose learning through the action loss.
 In the NVS variant, target-view queries are also built from predicted poses, so
-unlabeled episodes still provide view-synthesis supervision through their RGB
-targets.  Fig.~\ref{fig:pipeline} summarizes the action-only and NVS-regularized
-variants, while Fig.~\ref{fig:overview} illustrates the training signals.
+unlabeled episodes additionally provide view-synthesis supervision through their
+RGB targets.  Fig.~\ref{fig:pipeline} summarizes the action-only and
+NVS-regularized variants, while Fig.~\ref{fig:overview} illustrates the training
+signals.
 
 We evaluate on LIBERO-MV Spatial~\citep{liu2023libero}, MimicGen~\citep{mandlekar2023mimicgen},
 and real-world tabletop tasks.  On LIBERO-MV, a coupled policy with
