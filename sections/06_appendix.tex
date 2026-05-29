@@ -1,3 +1,6 @@
+\subsection{Policy Architecture and Action Objective}
+\label{sec:appendix-policy-architecture}
+
 \paragraph{Shared policy architecture.}
 Unless otherwise stated, the RGB observation encoder uses ViT-S scale
 components with hidden size 384, 6 transformer layers, 6 attention heads, and
@@ -33,6 +36,9 @@ hidden size 384, 6 transformer layers, 6 attention heads, and patch size 16.
 The reported runs use \(w_R=1.0\), \(w_x=0.5\), and
 \(\lambda_{\text{pose}}=1.0\).
 
+\subsection{NVS Training Details}
+\label{sec:appendix-nvs-training}
+
 \paragraph{Auxiliary losses and NVS training.}
 The action-only policy optimizes \(\mathcal{L}_{\text{act}}+
 \lambda_{\text{pose}}\mathcal{L}_{\text{pose}}\).  The NVS policy adds
@@ -53,7 +59,9 @@ This dropout is used only for the NVS branch and is not used by the
 action-only E2E policy.  Flow-matching inference uses \(\sigma_{\min}=0\) and
 10 denoising steps.
 
-\paragraph{LIBERO-MV Spatial.}
+\subsection{LIBERO-MV Spatial Protocol}
+\label{sec:appendix-libero-protocol}
+
 LIBERO-MV experiments follow the setup of Camera-Aware Multi-View Visuomotor
 Policies~\citep{anonymous2026cameraaware}: two random surround views
 (\texttt{surround2}), no wrist view, \(128{\times}128\) RGB inputs, 100k
@@ -61,7 +69,9 @@ training steps, batch size 256, AdamW with learning rate \(10^{-4}\), cosine
 schedule, 1k warmup steps, bf16 mixed precision, and EMA 0.9999.  Evaluation
 uses 10 tasks and 50 rollouts per task.
 
-\paragraph{MimicGen.}
+\subsection{MimicGen Protocol}
+\label{sec:appendix-mimicgen-protocol}
+
 MimicGen policies use 12 random surround cameras per episode and a 5\% demo
 holdout.  Rollout evaluation is run every 50k optimization steps under
 both \texttt{train\_wide} and \texttt{eval\_tight}, with 40 rollouts for each
@@ -71,7 +81,9 @@ target-observation dropout probability 0.6 during NVS training.  Diffusion
 Policy and ManiFlow use their original training recipes as closely as possible;
 ManiFlow uses 1024 point-cloud points.
 
-\paragraph{Checkpoint selection and reporting.}
+\subsection{Checkpoint Selection and Reporting}
+\label{sec:appendix-checkpoint-selection}
+
 For MimicGen, each saved evaluation point runs rollouts on the training camera
 distribution and on the tighter held-out camera distribution.  The paper reports
 the checkpoint with the highest validation rollout success over the full
@@ -79,7 +91,9 @@ training run's scheduled validation evaluations.  Reported train-camera and
 tight-camera success rates come from the same selected checkpoint, rather than
 from separately selecting a best checkpoint for each camera setting.
 
-\paragraph{Real-World Tabletop.}
+\subsection{Real-World Tabletop Protocol}
+\label{sec:appendix-realworld-protocol}
+
 The real-world training set contains \(3{,}171\) teleoperated episodes across
 five household task prompts; the table in the main text reports the three tasks
 covered by the matched evaluation protocol.  The E2E camera-pose NVS policy uses

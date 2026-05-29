@@ -6,7 +6,7 @@ needed for end-to-end camera-pose learning.  We follow the LIBERO-MV Spatial
 protocol of Camera-Aware Multi-View Visuomotor Policies~\citep{anonymous2026cameraaware}:
 policies receive two random surround views and are evaluated on all 10 Spatial
 tasks with 50 rollouts each.  Resolution, action horizon, optimization, and
-camera sampling details are in \autoref{sec:appendix-implementation}.
+camera sampling details are in \autoref{sec:appendix-libero-protocol}.
 
 \paragraph{Compared methods.}
 For comparability, our implementation follows the reference policy stack: the
@@ -63,8 +63,9 @@ Each camera setting uses 40 rollouts per evaluation checkpoint, and checkpoint
 selection is based on validation rollout success.  We compare to Diffusion
 Policy~\citep{chi2023diffusionpolicy} as an image baseline and
 ManiFlow~\citep{yan2025maniflow} as a point-cloud baseline; split, camera,
-checkpoint, and hyperparameter details are in
-\autoref{sec:appendix-implementation}.
+and hyperparameter details are in \autoref{sec:appendix-mimicgen-protocol}, and
+checkpoint selection is described in
+\autoref{sec:appendix-checkpoint-selection}.
 
 \paragraph{Results.}
 Fig.~\ref{fig:mimicgen-results} reports episode-level success.  The NVS policy
@@ -109,7 +110,7 @@ obtained. During data
 collection their calibrated extrinsics vary across episode.  The Plucker-GT and Plucker-RayZer numbers
 are the calibrated and decoupled baselines evaluated under this protocol on the
 same hardware~\citep{anonymous2026cameraaware}; baseline definitions, scoring,
-and dataset details are in \autoref{sec:appendix-implementation}.  Our E2E
+and dataset details are in \autoref{sec:appendix-realworld-protocol}.  Our E2E
 camera-pose NVS policy uses pose labels for 50\% of training episodes and no
 calibration at inference.
 

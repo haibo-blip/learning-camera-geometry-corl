@@ -63,7 +63,8 @@ z_t = f_\theta\left(\{I_{t,i}, P_{t,i}\}_{i=1}^{N}, q_t, c\right).
 \end{equation}
 An action expert \(g_\psi\) predicts the action chunk with a conditional
 flow-matching decoder; the standard flow-matching velocity objective
-\(\mathcal{L}_{\text{act}}\) is given in \autoref{sec:appendix-implementation}.
+\(\mathcal{L}_{\text{act}}\) is given in
+\autoref{sec:appendix-policy-architecture}.
 The total objective for this variant is
 \begin{equation}
 \mathcal{L}_{\text{E2E-act}} =
@@ -87,7 +88,7 @@ transformers~\citep{sajjadi2022srt,jin2024lvsm,jiang2025rayzer}: a fixed set of
 learned scene tokens attends over the multi-view RGB--ray patches and the patch
 tokens are then discarded, so the NVS branch decodes from a latent scene-token
 bottleneck rather than the full source patch sequence (\(M{=}64\); encoder and
-decoder sizes in \autoref{sec:appendix-implementation}).  The action expert uses
+decoder sizes in \autoref{sec:appendix-nvs-training}).  The action expert uses
 these tokens together with proprioception and task conditioning,
 \(z_t^{\text{scene}} = \text{concat}(R_t, q_t, c)\), and is trained with the same
 flow-matching action loss \(\mathcal{L}_{\text{act}}\) as the action-only
@@ -127,8 +128,9 @@ training objective is
 \end{equation}
 
 At inference, the policy keeps the pose head, scene-token encoder, and action
-expert, but discards the NVS decoder.  Implementation and checkpoint-selection
-details are summarized in \autoref{sec:appendix-implementation}.
+expert, but discards the NVS decoder.  Additional architecture and NVS training
+details are summarized in \autoref{sec:appendix-policy-architecture} and
+\autoref{sec:appendix-nvs-training}.
 
 \begin{figure}[t]
     \centering
