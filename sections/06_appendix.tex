@@ -3,7 +3,20 @@ Unless otherwise stated, the RGB observation encoder uses ViT-S scale
 components with hidden size 384, 6 transformer layers, 6 attention heads, and
 patch size 16.  The action expert is a flow-matching DiT with hidden size 384,
 8 layers, and 6 attention heads.  Policies predict 32-step action chunks and
-execute actions with an 8-step replanning interval in simulation.
+execute actions with an 8-step replanning interval in simulation.  Actions are
+end-effector translation, 6D rotation, and gripper command.
+
+\paragraph{Flow-matching action objective.}
+With \(x_1=A_t\) the demonstration action chunk, \(x_0\sim\mathcal{N}(0,I)\), and
+\(\tau\sim U[0,1]\), the action expert \(g_\psi\) regresses the conditional
+flow-matching velocity field along the interpolation
+\(x_\tau = (1-(1-\sigma_{\min})\tau)x_0+\tau x_1\), with target
+\(u_\tau = x_1-(1-\sigma_{\min})x_0\):
+\begin{equation}
+\mathcal{L}_{\text{act}} =
+\mathbb{E}_{x_0,\tau}\left[\|g_\psi(x_\tau,\tau,z_t)-u_\tau\|_2^2\right],
+\end{equation}
+where \(z_t\) is the (ray-conditioned or scene-token) observation embedding.
 
 \paragraph{Pose and ray construction.}
 All proposed variants assume known camera intrinsics and a known kinematic
@@ -73,7 +86,13 @@ platform, camera rig, rubrics, and trial counts; the Plucker-GT and
 Plucker-RayZer reference numbers are the calibrated and decoupled baselines
 evaluated under the same protocol on the same
 hardware~\citep{anonymous2026cameraaware}.  Actions are predicted in the absolute
-end-effector frame as 1-second chunks at 50 Hz.
+end-effector frame (position, 6D rotation, continuous gripper) as 1-second
+chunks at 50 Hz.  Each cell reports full-task success and rubric-weighted task
+progress.  Cup Stacking and Stand-up Cup use 20 trials each (rubric max 2 points
+per trial); Blocks-in-Bowl uses 10 trials under a 4-minute wall-clock cap, with
+the rubric giving one point per successful grasp and one per successful
+placement across four blocks (eight points per trial; full success requires all
+four blocks placed).
 
 \section{Camera-Pose Loss}
 
@@ -134,6 +153,15 @@ pose head's predicted rays.
     \bottomrule
   \end{tabular}
 \end{table}
+
+\section{MimicGen Stack Three Ablations}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.76\linewidth]{figures/mimicgen_stack_three_ablations.png}
+  \caption{Stack Three ablations on MimicGen (summarized in the main text). Left: effect of end-to-end camera-pose prediction and NVS. Right: effect of the NVS scene-token bottleneck.}
+  \label{fig:mimicgen-ablations}
+\end{figure}
 
 \clearpage
 \section{Novel-View Synthesis Quality}

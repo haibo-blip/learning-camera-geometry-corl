@@ -2,34 +2,21 @@
 
 \paragraph{Goal and protocol.}
 The LIBERO-MV Spatial experiment isolates how much camera-pose supervision is
-needed for end-to-end camera-pose learning.  We vary the fraction of training
-episodes with pose labels and compare against policies trained with ground-truth
-camera geometry.  To make this comparison meaningful, we follow the same
-LIBERO-MV Spatial setting as Camera-Aware Multi-View Visuomotor
-Policies~\citep{anonymous2026cameraaware}.  LIBERO-MV re-renders each LIBERO
-episode with 12 static scene cameras sampled from the upper hemisphere around
-the workspace.  During training and evaluation the policy receives two random
-surround views.  Images are resized to
-\(128{\times}128\), actions are 32-step chunks in an end-effector action space
-with 6D rotation and gripper command, and the policy replans every 8
-steps.  After training, evaluation runs all 10 LIBERO-MV Spatial tasks with 50
-rollouts per task, for 500 rollouts per method.
+needed.  We follow the LIBERO-MV Spatial protocol of Camera-Aware Multi-View
+Visuomotor Policies~\citep{anonymous2026cameraaware}: each episode is re-rendered
+with 12 surround cameras, the policy receives two random surround views, and
+evaluation runs all 10 tasks at 50 rollouts each (500 per method).  Remaining
+setup (resolution, action space, replanning) is in
+\autoref{sec:appendix-implementation}.
 
 \paragraph{Compared methods.}
-The reference methods share the same policy backbone and action decoder but
-change how camera geometry enters the observation encoder.  \texttt{ViT+CamID}
-uses RGB with a learned camera identity but no metric camera geometry.
-\texttt{Plucker-GT} concatenates calibrated per-pixel Plucker ray maps to RGB.
-\texttt{PRoPE-GT} injects calibrated relative camera pose inside attention.  All
-calibrated baselines are run under the identical LIBERO-MV Spatial protocol used
-for our policies --- same backbone, action decoder, camera sampling, resolution,
-and rollout budget --- so the only changing factor is how camera geometry enters
-the encoder.  Our
-E2E camera-pose action policy replaces calibrated extrinsics with poses predicted
-from RGB, constructs Plucker rays from those predictions, and trains the pose
-head jointly with the action objective.  Pose supervision is assigned at the
-episode level: an episode either provides all camera-pose labels or contributes
-no pose loss.  Episodes without pose labels still train the action policy.
+The reference methods share our backbone and action decoder and change only how
+camera geometry enters the encoder: \texttt{ViT+CamID} uses a learned camera
+identity with no metric geometry, \texttt{Plucker-GT} concatenates calibrated
+Plucker ray maps to RGB, and \texttt{PRoPE-GT} injects calibrated relative pose
+inside attention; all run under the same protocol as our policies.  Our E2E
+camera-pose action policy instead predicts pose from RGB and trains the pose
+head jointly with the action objective, with episode-level pose labels.
 
 \paragraph{Pose-label sweep.}
 We vary the fraction of pose-labeled training episodes over
@@ -58,77 +45,44 @@ geometry used by a fixed encoder.
 A natural alternative is to learn camera geometry \emph{outside} the control
 objective: train a pose head in isolation by supervised regression of the
 calibrated extrinsics, then plug its predictions into a frozen geometry-trained
-policy with no joint optimization.  This setting tests whether a supervised pose
-head can serve as a drop-in replacement for calibrated extrinsics at deployment.
-It is not a fully controlled isolation of joint optimization, because the frozen
-policy is trained on ground-truth poses and only sees the head's predictions at
-deployment.  Under the identical LIBERO-MV Spatial protocol, this decoupled
-two-stage variant (the predicted-pose deployment of the calibrated Plucker
-policy) reaches \(0.660\) success using \emph{full} pose supervision, whereas
-our coupled E2E camera-pose action policy reaches \(0.865\) using pose labels
-for only \(50\%\) of episodes --- a \(20.5\)-point gain at half the label
-budget.  Notably, the decoupled pose head is \emph{metrically far more
-accurate} --- \(0.33^\circ\) rotation error versus \(2.42^\circ\) for the
-coupled 50\% run --- yet yields the weaker deployment result
-(Table~\ref{tab:pose-dissociation}).  The same pattern holds across the label
-sweep (Table~\ref{tab:appendix-pose-sweep}): driving the coupled pose head from
-\(7.6^\circ\) error at 10\% labels down to \(0.16^\circ\) at 100\% --- a roughly
-\(48\times\) reduction --- moves Spatial success by under five points.  We
-interpret this as a deployment-consistency result.  The frozen Plucker policy is
-trained on ground-truth rays and evaluated with predicted rays, while the coupled
-policy is trained and evaluated on its own predicted geometry.  Thus, a low-error
-pose head is not automatically a drop-in substitute for calibrated geometry; the
-policy also depends on whether the geometry distribution used at test matches
-the one it saw during training.
+policy.  This is a deployment-consistency test rather than a fully controlled
+isolation of joint optimization: the frozen policy is trained on ground-truth
+rays but deployed with predicted rays, while the coupled policy is trained and
+evaluated on its own predicted geometry.  Under the identical LIBERO-MV Spatial
+protocol, the decoupled two-stage variant reaches \(0.660\) success using
+\emph{full} pose supervision, whereas our coupled E2E camera-pose action policy
+reaches \(0.865\) using pose labels for only \(50\%\) of episodes --- a
+\(20.5\)-point gain at half the label budget --- even though the decoupled pose
+head is metrically far more accurate (\(0.33^\circ\) vs.\ \(2.42^\circ\)
+rotation error; per-ratio numbers in \autoref{tab:appendix-pose-sweep}).
 
-\begin{table}[t]
-  \centering
-  \caption{Decoupled predicted-pose deployment on LIBERO-MV Spatial. The
-  supervised-only pose head has roughly 7$\times$ lower rotation error than the
-  coupled 50\% run, yet the frozen Plucker policy loses performance when its
-  calibrated training geometry is replaced by predicted geometry at deployment.
-  Coupled E2E is the 50\% label-ratio run; per-ratio pose accuracy is in
-  Table~\ref{tab:appendix-pose-sweep}.}
-  \label{tab:pose-dissociation}
-  \begin{tabular}{lccc}
-    \toprule
-    Variant & Rot. err.\ (deg)\,$\downarrow$ & Trans. err.\ (m)\,$\downarrow$ & Spatial success\,$\uparrow$ \\
-    \midrule
-    Decoupled (supervised pose, frozen policy) & \textbf{0.334} & \textbf{0.00576} & 0.660 \\
-    Coupled E2E (ours, 50\% labels)            & 2.422 & 0.0710 & \textbf{0.865} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+The label-ratio sweep provides a complementary within-coupled view.  Each
+coupled run trains and evaluates with its own predicted rays, so it removes this
+train--test geometry mismatch (though label-subset, single-seed, and
+training-noise variation remain).  Across the sweep, reducing rotation error
+from \(7.6^\circ\) to \(0.16^\circ\) changes Spatial success by under five
+points, suggesting that within end-to-end training, lower standalone pose error
+is not the main determinant of control performance: the policy instead learns
+geometry that is useful for, and consistent with, the control objective.
 
 \subsection{MimicGen Camera-Shift Evaluation}
 
 \paragraph{Dataset and splits.}
 We use MimicGen~\citep{mandlekar2023mimicgen} as a second simulation benchmark
-because its generated demonstrations have larger episode-to-episode variation
-than LIBERO-MV, making it a stronger test of policy performance under camera
-shift.  We report four tasks with different difficulty profiles:
-Stack is the easiest and is near-saturated for several methods; Stack Three adds
-a longer multi-object stacking sequence; Coffee and Threading require more
-precise object alignment and contact.  Each policy is trained on the
-corresponding MimicGen multicamera demonstrations with 12 random surround
-cameras available per episode.  We hold out 5\% of demonstrations with a fixed
-split seed and train on the remaining demos.
+because its generated demonstrations vary more episode-to-episode than
+LIBERO-MV, a stronger test under camera shift.  We report four tasks of
+increasing difficulty --- Stack (near-saturated), Stack Three, Coffee, and
+Threading --- trained on the corresponding multicamera demonstrations (12
+surround cameras per episode, 5\% held out by a fixed seed).
 
 \paragraph{Camera distributions.}
-During training, input cameras are sampled from the \texttt{train\_wide}
-distribution illustrated in Fig.~\ref{fig:overview}.  We launch rollout
-evaluation every 50k optimization steps on two camera settings: the same
-\texttt{train\_wide} distribution used for training, and a held-out
-\texttt{eval\_tight} distribution that draws the surround cameras from a
-narrower angular spread clustered closer to a frontal band rather than the full
-upper hemisphere (Fig.~\ref{fig:overview}), so the policy must transfer to
-viewpoints outside the training distribution.  Each evaluation uses 40 rollouts
-per camera setting.  This separates in-distribution policy learning from
-camera-distribution transfer.  After training completes, checkpoint selection is
-validation-based: for each run, we select the checkpoint with the highest
-validation rollout success over the scheduled validation evaluations, and report
-the corresponding train-camera and tight-camera rollout success at that
-checkpoint.
+Input cameras are sampled from a \texttt{train\_wide} distribution at training;
+we evaluate on both \texttt{train\_wide} and a held-out \texttt{eval\_tight}
+distribution whose surround cameras span a narrower angular range than training
+(Fig.~\ref{fig:overview}), separating in-distribution learning from
+camera-distribution transfer (40 rollouts per setting).  We report a single
+validation-selected checkpoint for both camera settings; selection details are
+in \autoref{sec:appendix-implementation}.
 
 \paragraph{Methods and inputs.}
 We compare against Diffusion Policy~\citep{chi2023diffusionpolicy} as the image
@@ -167,48 +121,26 @@ without depth or calibration at inference.
 \end{figure}
 
 \paragraph{Ablations.}
-Fig.~\ref{fig:mimicgen-ablations} isolates two design choices on Stack Three.
-Removing both end-to-end camera-pose prediction and NVS gives 17.5\% success on
-train-camera evaluation and 0\% under tight-camera evaluation.  Adding
-end-to-end pose prediction improves train-camera success to 30\%, while adding
-NVS raises performance to 55\% train-camera and 25\% tight-camera success.  For
-the NVS model, removing the scene-token bottleneck keeps train-camera success at
-55\% but reduces tight-camera success from 25\% to 7.5\%, suggesting that the
-latent scene-token bottleneck is most helpful under camera shift.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.76\linewidth]{figures/mimicgen_stack_three_ablations.png}
-  \caption{Stack Three ablations on MimicGen. Left: effect of end-to-end camera-pose prediction and NVS. Right: effect of the NVS scene-token bottleneck.}
-  \label{fig:mimicgen-ablations}
-\end{figure}
+Ablations on Stack Three (\autoref{fig:mimicgen-ablations}) support both
+components: adding E2E pose prediction lifts train-camera success from 17.5\% to
+30\%, and adding NVS reaches 55\% train / 25\% tight; removing the scene-token
+bottleneck leaves train-camera unchanged (55\%) but halves tight-camera success
+(25\%~$\to$~7.5\%), so the bottleneck matters most under camera shift.
 
 \subsection{Real-World Tabletop Evaluation}
 
 \paragraph{Protocol and supervision budget.}
-We evaluate on a single-arm Trossen WidowX AI in an ALOHA-style
-leader--follower setup, with one wrist Intel RealSense D405 camera and two
-scene-side RealSense D455F cameras.  Policies train from teleoperated episodes
-resampled to a 50 Hz state/action clock, predict 1-second action chunks, and
-represent each action as position, 6D rotation, and continuous gripper command.
-The comparison is \emph{matched in protocol}: our policy and both references use
-the same robot platform, the same wrist-plus-two-surround camera rig, and the
-identical per-task rubrics, trial counts, and success definitions, and differ
-only in how camera geometry is obtained.  The Plucker-GT and Plucker-RayZer
-reference numbers are the calibrated and decoupled baselines evaluated under this
-protocol on the same hardware~\citep{anonymous2026cameraaware}.  Thus the
-comparison is not a cross-paper mix of different hardware, tasks, or scoring
-rules.  The calibrated Plucker-GT reference
-consumes scene-camera extrinsics on every episode at both training and test
-time; the decoupled Plucker-RayZer reference predicts pose at inference from a
-separately trained pose head plugged into a frozen policy; our E2E camera-pose
-NVS policy uses camera-pose labels for only 50\% of training episodes and no
-calibration at inference, predicting camera geometry inside the policy.  Each
-cell reports full-task success and
-rubric-weighted task progress over the stated trial count.  For Blocks-in-Bowl
-the trial has a 4-minute wall-clock cap, and the rubric gives one point per
-successful grasp and one point per successful placement across four blocks
-(eight points per trial; full success requires all four blocks placed).
+We evaluate on a single-arm Trossen WidowX AI (one wrist and two scene-side
+RealSense cameras).  The comparison is \emph{matched in protocol}: our policy and
+both references use the same robot, camera rig, per-task rubrics, trial counts,
+and success definitions, and differ only in how camera geometry is obtained ---
+so this is not a cross-paper mix of different hardware, tasks, or scoring rules.
+The Plucker-GT and Plucker-RayZer reference numbers are the calibrated and
+decoupled baselines under this protocol on the same
+hardware~\citep{anonymous2026cameraaware}; our E2E camera-pose NVS policy uses
+pose labels for only 50\% of training episodes and no calibration at inference.
+Each cell reports full-task success / rubric-weighted progress; rubric and
+action-space details are in \autoref{sec:appendix-implementation}.
 
 \paragraph{Results.}
 Table~\ref{tab:realworld} compares our coupled NVS policy against two references
