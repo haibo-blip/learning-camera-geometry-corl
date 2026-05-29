@@ -31,8 +31,9 @@ many uncalibrated, depth-free demonstrations unusable for geometry-aware
 learning.  We learn camera geometry end-to-end inside the policy.  A pose head
 predicts extrinsics from RGB, differentiable Plucker ray construction conditions
 the action expert, and ground-truth poses supervise only a subset of episodes.
-Unlabeled episodes still train through action loss, and in our NVS variant also
-through target-view reconstruction from predicted-pose queries.
+Unlabeled episodes still train through action loss, and in our novel-view
+synthesis (NVS) variant also through target-view reconstruction from
+predicted-pose queries.
 
 This formulation combines RGB data accessibility with explicit geometric
 conditioning.  On LIBERO-MV Spatial, our coupled camera-pose policy matches or
