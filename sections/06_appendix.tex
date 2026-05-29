@@ -16,20 +16,28 @@ predicted poses; ground-truth extrinsics are never fed to the policy or NVS
 decoder.  They are used only to compute \(\mathcal{L}_{\text{pose}}\) on the
 episode subset selected for pose supervision.  Unlabeled episodes therefore
 still contribute action loss, and in the NVS variant they also contribute
-view-synthesis loss through their RGB target images.
+view-synthesis loss through their RGB target images.  The pose predictor uses
+hidden size 384, 6 transformer layers, 6 attention heads, and patch size 16.
+The reported runs use \(w_R=1.0\), \(w_x=0.5\), and
+\(\lambda_{\text{pose}}=1.0\).
 
 \paragraph{Auxiliary losses and NVS training.}
 The action-only policy optimizes \(\mathcal{L}_{\text{act}}+
 \lambda_{\text{pose}}\mathcal{L}_{\text{pose}}\).  The NVS policy adds
-\(\lambda_{\text{nvs}}\mathcal{L}_{\text{nvs}}\), where
-\(\mathcal{L}_{\text{nvs}}\) combines pixel MSE with LPIPS at \(\beta=0.5\).
-For each NVS training example, one available view is sampled as the target.  Its
+\(\lambda_{\text{nvs}}\mathcal{L}_{\text{nvs}}\) with
+\(\lambda_{\text{nvs}}=1.0\).  The scene-token encoder uses hidden size 384, 12
+transformer layers, 6 attention heads, patch size 8, and 64 active scene tokens.
+The NVS decoder uses hidden size 384, 8 transformer layers, and 6 attention
+heads.  \(\mathcal{L}_{\text{nvs}}\) combines pixel MSE with VGG-LPIPS at
+\(\beta=0.5\).  For each NVS training example, one available view is sampled as
+the target.  Its
 RGB image is the reconstruction target, while its predicted ray map is used as
 the decoder query.  The target observation is dropped from the scene-token
 encoder input with probability \(p_{\text{drop}}=0.6\); when dropped, the scene
 tokens must reconstruct the target view from the remaining source observations.
 This dropout is used only for the NVS branch and is not used by the
-action-only E2E policy.
+action-only E2E policy.  Flow-matching inference uses \(\sigma_{\min}=0\) and
+10 denoising steps.
 
 \paragraph{LIBERO-MV Spatial.}
 LIBERO-MV experiments follow the setup of Camera-Aware Multi-View Visuomotor
