@@ -58,10 +58,11 @@ end-to-end camera-pose policies under both train-camera and tight-camera
 evaluation.  Averaged across the four MimicGen tasks, the NVS variant
 improves over the action-only variant by 13.1 percentage points on
 train-camera evaluation and 23.1 points under tight-camera evaluation.  On a
-real-world tabletop suite evaluated under a protocol matched to the calibrated
-Plucker-GT reference, the NVS policy matches or exceeds that reference (100\%
-vs.\ 50\% full-task success on Blocks-in-Bowl) while using camera-pose labels
-for only half of the training episodes and no calibration at inference.
+real-world tabletop suite under a matched protocol, the NVS policy outperforms a
+decoupled calibration-free baseline on every task and matches or exceeds the
+calibrated Plucker-GT upper bound in aggregate (100\% vs.\ 50\% full-task
+success on Blocks-in-Bowl), while using camera-pose labels for only half of the
+training episodes and no calibration at inference.
 
 The paper makes three contributions.  First, we formulate camera geometry
 learning as an end-to-end visuomotor control problem with episode-level
