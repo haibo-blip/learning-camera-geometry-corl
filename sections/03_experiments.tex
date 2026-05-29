@@ -110,9 +110,10 @@ collection their calibrated extrinsics vary across episodes, and in the
 calibration-free rollout protocol the surrounds are physically moved between
 trials before pose is re-predicted.  The Plucker-GT and Plucker-RayZer numbers
 are the calibrated and decoupled baselines evaluated under this protocol on the
-same hardware~\citep{anonymous2026cameraaware}; scoring and dataset details are
-in \autoref{sec:appendix-implementation}.  Our E2E camera-pose NVS policy uses
-pose labels for 50\% of training episodes and no calibration at inference.
+same hardware~\citep{anonymous2026cameraaware}; baseline definitions, scoring,
+and dataset details are in \autoref{sec:appendix-implementation}.  Our E2E
+camera-pose NVS policy uses pose labels for 50\% of training episodes and no
+calibration at inference.
 
 \paragraph{Results.}
 Table~\ref{tab:realworld} compares our coupled NVS policy against a calibrated

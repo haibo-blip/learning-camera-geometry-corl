@@ -83,11 +83,15 @@ from separately selecting a best checkpoint for each camera setting.
 The real-world training set contains \(3{,}171\) teleoperated episodes across
 five household task prompts; the table in the main text reports the three tasks
 covered by the matched evaluation protocol.  The E2E camera-pose NVS policy uses
-50\% episode-level pose labels and no calibration at inference; the Plucker-GT
-reference uses full per-episode calibration at both training and test time.  All
-conditions use the same robot platform, camera hardware, rubrics, and trial
-counts; the Plucker-GT and Plucker-RayZer reference numbers are the calibrated
-and decoupled baselines evaluated under the same protocol on the same
+50\% episode-level pose labels and no calibration at inference.  Plucker-GT uses
+the same policy structure as our E2E camera-pose action policy, but removes the
+camera-pose predictor and constructs Plucker rays from ground-truth camera
+poses.  Plucker-RayZer uses the same action-only policy structure, but trains
+the camera-pose predictor separately from the action expert and uses 100\% of
+the pose-labeled data for that pose training.  All conditions use the same robot
+platform, camera hardware, rubrics, and trial counts; the Plucker-GT and
+Plucker-RayZer reference numbers are the calibrated and decoupled baselines
+evaluated under the same protocol on the same
 hardware~\citep{anonymous2026cameraaware}.  The scene-camera extrinsics are
 stored with the data and vary across collection episodes; in the
 calibration-free rollout protocol, the scene cameras are also physically moved
