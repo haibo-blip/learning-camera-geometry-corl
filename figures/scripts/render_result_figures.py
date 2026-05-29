@@ -66,12 +66,7 @@ def render_libero() -> None:
     baselines = [r for r in rows if r["plot"] == "baseline"]
     sweep = [r for r in rows if r["plot"] == "sweep"]
 
-    fig, (ax0, ax1) = plt.subplots(
-        1,
-        2,
-        figsize=(9.4, 4.2),
-        gridspec_kw={"width_ratios": [0.92, 1.18]},
-    )
+    fig, ax0 = plt.subplots(figsize=(5.2, 3.8))
     fig.patch.set_facecolor("white")
 
     labels = [r["method"] for r in baselines]
@@ -89,7 +84,11 @@ def render_libero() -> None:
     ax0.set_xlabel("Spatial success (%)")
     ax0.grid(axis="x")
     ax0.grid(axis="y", visible=False)
+    fig.tight_layout()
+    save(fig, "libero_mv_spatial_summary")
 
+    fig, ax1 = plt.subplots(figsize=(5.2, 3.8))
+    fig.patch.set_facecolor("white")
     ratios = np.array([float(r["ratio"]) for r in sweep])
     sr = np.array([float(r["success"]) * 100 for r in sweep])
     ax1.plot(ratios, sr, color=COLORS["action"], linewidth=4.0, marker="o", markersize=9)
@@ -112,9 +111,8 @@ def render_libero() -> None:
     ax1.set_xlabel("GT pose labels used in training (%)")
     ax1.set_ylabel("Average success (%)")
     ax1.grid(True)
-
-    fig.tight_layout(w_pad=3.0)
-    save(fig, "libero_mv_spatial_summary")
+    fig.tight_layout()
+    save(fig, "libero_mv_label_sweep")
 
 
 def render_mimicgen() -> None:
