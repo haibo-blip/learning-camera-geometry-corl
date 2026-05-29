@@ -9,14 +9,15 @@ tasks with 50 rollouts each.  Resolution, action horizon, optimization, and
 camera sampling details are in \autoref{sec:appendix-implementation}.
 
 \paragraph{Compared methods.}
-The reference methods share our backbone and action decoder and change only how
-camera geometry enters the encoder: \texttt{ViT+CamID} uses a learned camera
-identity with no metric geometry, \texttt{Plucker-GT} concatenates calibrated
-Plucker ray maps to RGB, and \texttt{PRoPE-GT} injects calibrated relative pose
-inside attention.  Our E2E
-camera-pose action policy instead predicts pose from RGB and trains the pose
-head jointly with action prediction; unlabeled episodes contribute action loss
-but no pose loss.
+For comparability, our implementation follows the reference policy stack: the
+image backbone and action decoder are held fixed across methods, while the
+geometry interface changes.  In the calibrated references, \texttt{ViT+CamID}
+uses a learned camera identity with no metric geometry, \texttt{Plucker-GT}
+concatenates calibrated Plucker ray maps to RGB, and \texttt{PRoPE-GT} injects
+calibrated relative pose inside attention.  Our E2E camera-pose action policy
+keeps the same backbone and decoder but replaces calibrated pose input with an
+RGB pose predictor trained jointly with action prediction; unlabeled episodes
+contribute action loss but no pose loss.
 
 \paragraph{Pose-label sweep.}
 We vary the fraction of pose-labeled training episodes over
@@ -26,7 +27,8 @@ calibrated Plucker baseline (0.820 vs.\ 0.622), and the best E2E run matches the
 stronger calibrated PRoPE reference.  Across the sweep, success remains high
 (0.78--0.87) despite large differences in standalone pose error, suggesting that
 the action objective shapes predicted geometry toward what the policy needs for
-control.
+control; \autoref{sec:appendix-pose-sweep} reports the corresponding pose-error
+analysis.
 
 \begin{figure}[t]
   \centering
@@ -72,8 +74,9 @@ the action-only variant on train-camera evaluation at 97.5\% and improves
 tight-camera success from 2.5\% to 42.5\%.  Relative to ManiFlow, the comparison
 is mixed: averaged over four tasks, our NVS policy leads on train-camera success
 (46.9\% vs.\ 34.4\%) but trails on tight-camera success (23.8\% vs.\ 31.9\%).
-We therefore claim competitiveness from RGB alone, not dominance over
-depth-based point clouds under camera shift.
+The result is therefore an RGB-only policy comparison with competitive
+camera-shift behavior, not a claim that RGB policies replace depth-based
+point-cloud methods in every shifted-camera regime.
 
 \begin{figure}[t]
   \centering
@@ -96,13 +99,16 @@ that the bottleneck matters most under camera shift.
 \paragraph{Protocol and supervision budget.}
 We evaluate on a single-arm Trossen WidowX AI with one wrist RealSense D405 and
 two scene-side RealSense D455F cameras.  The comparison is matched in protocol:
-our policy and both references use the same platform, camera rig, rubrics, trial
-counts, and success definitions, and differ only in how camera geometry is
-obtained.  The Plucker-GT and Plucker-RayZer numbers are the calibrated and
-decoupled baselines evaluated under this protocol on the same
-hardware~\citep{anonymous2026cameraaware}; scoring details are in
-\autoref{sec:appendix-implementation}.  Our E2E camera-pose NVS policy uses pose
-labels for 50\% of training episodes and no calibration at inference.
+our policy and both references use the same platform, camera hardware, rubrics,
+trial counts, and success definitions, and differ only in how camera geometry is
+obtained.  The scene cameras are not treated as fixed IDs: during data
+collection their calibrated extrinsics vary across episodes, and in the
+calibration-free rollout protocol the surrounds are physically moved between
+trials before pose is re-predicted.  The Plucker-GT and Plucker-RayZer numbers
+are the calibrated and decoupled baselines evaluated under this protocol on the
+same hardware~\citep{anonymous2026cameraaware}; scoring and dataset details are
+in \autoref{sec:appendix-implementation}.  Our E2E camera-pose NVS policy uses
+pose labels for 50\% of training episodes and no calibration at inference.
 
 \paragraph{Results.}
 Table~\ref{tab:realworld} compares our coupled NVS policy against a calibrated
@@ -117,7 +123,7 @@ Blocks-in-Bowl and the calibrated reference remains saturated on Cup Stacking.
 \begin{table}[t]
   \centering
   \caption{Real-world comparison under a matched protocol on the same platform,
-  camera rig, and rubrics. Cells are full-task success / rubric-weighted progress
+  camera hardware, and rubrics. Cells are full-task success / rubric-weighted progress
   (\%); best success per row in bold.}
   \label{tab:realworld}
   \begin{tabular}{lccc}

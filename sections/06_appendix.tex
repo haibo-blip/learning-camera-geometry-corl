@@ -44,11 +44,11 @@ after self-attention, patch tokens are discarded and only the active scene token
 are retained.  The NVS decoder uses hidden size 384, 8 transformer layers, and 6
 attention heads.  \(\mathcal{L}_{\text{nvs}}\) combines pixel MSE with VGG-LPIPS at
 \(\beta=0.5\).  For each NVS training example, one available view is sampled as
-the target.  Its
-RGB image is the reconstruction target, while its predicted ray map is used as
-the decoder query.  The target observation is dropped from the scene-token
-encoder input with probability \(p_{\text{drop}}=0.6\); when dropped, the scene
-tokens must reconstruct the target view from the remaining source observations.
+the target.  Its RGB image is the reconstruction target, while its predicted ray
+map is used as the decoder query.  The target observation is masked from the
+scene-token encoder input with probability \(p_{\text{drop}}=0.6\); when the mask
+is active, the scene tokens must reconstruct the target view from the remaining
+source observations.
 This dropout is used only for the NVS branch and is not used by the
 action-only E2E policy.  Flow-matching inference uses \(\sigma_{\min}=0\) and
 10 denoising steps.
@@ -80,18 +80,23 @@ tight-camera success rates come from the same selected checkpoint, rather than
 from separately selecting a best checkpoint for each camera setting.
 
 \paragraph{Real-World Tabletop.}
-The real-world E2E camera-pose NVS policy uses 50\% episode-level pose labels
-and no calibration at inference; the Plucker-GT reference uses full per-episode
-calibration at both training and test time.  All conditions use the same robot
-platform, camera rig, rubrics, and trial counts; the Plucker-GT and
-Plucker-RayZer reference numbers are the calibrated and decoupled baselines
-evaluated under the same protocol on the same
-hardware~\citep{anonymous2026cameraaware}.  Actions are predicted in the absolute
-end-effector frame (position, 6D rotation, continuous gripper) as 1-second
-chunks at 50 Hz.  The platform is a Trossen WidowX AI with one wrist Intel
-RealSense D405 camera and two scene-side RealSense D455F cameras.  Each cell
-reports full-task success and rubric-weighted task progress.  Cup Stacking and
-Stand-up Cup use 20 trials each (rubric max 2 points per trial);
+The real-world training set contains \(3{,}171\) teleoperated episodes across
+five household task prompts; the table in the main text reports the three tasks
+covered by the matched evaluation protocol.  The E2E camera-pose NVS policy uses
+50\% episode-level pose labels and no calibration at inference; the Plucker-GT
+reference uses full per-episode calibration at both training and test time.  All
+conditions use the same robot platform, camera hardware, rubrics, and trial
+counts; the Plucker-GT and Plucker-RayZer reference numbers are the calibrated
+and decoupled baselines evaluated under the same protocol on the same
+hardware~\citep{anonymous2026cameraaware}.  The scene-camera extrinsics are
+stored with the data and vary across collection episodes; in the
+calibration-free rollout protocol, the scene cameras are also physically moved
+between trials before poses are re-predicted.  Actions are predicted in the
+absolute end-effector frame (position, 6D rotation, continuous gripper) as
+1-second chunks at 50 Hz.  The platform is a Trossen WidowX AI with one wrist
+Intel RealSense D405 camera and two scene-side RealSense D455F cameras.  Each
+cell reports full-task success and rubric-weighted task progress.  Cup Stacking
+and Stand-up Cup use 20 trials each (rubric max 2 points per trial);
 Blocks-in-Bowl uses 10 trials under a 4-minute wall-clock cap, with one point
 per successful grasp and one per successful placement across four blocks (eight
 points per trial; full success requires all four blocks placed).
@@ -122,6 +127,7 @@ are logged from held-out visualization rollouts.
 \end{table}
 
 \section{LIBERO-MV Pose Accuracy vs.\ Label Ratio}
+\label{sec:appendix-pose-sweep}
 
 Table~\ref{tab:appendix-pose-sweep} reports the converged camera-pose error of
 the coupled E2E policy at each label ratio of the LIBERO-MV Spatial sweep,

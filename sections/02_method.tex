@@ -46,11 +46,11 @@ six-channel Plucker ray map~\citep{plucker1865newgeometry,sitzmann2021lfn}
 \begin{equation}
 P_{t,i}(u)=\left[o_{t,i}(u)\times d_{t,i}(u),\ d_{t,i}(u)\right].
 \end{equation}
-We use the explicit Plucker form, rather than the attention-level camera
-encodings covered in the related work, because ray construction is
-differentiable with respect to \(\hat{T}_{t,i}\), giving a direct path from
-predicted pose to every visual token; downstream losses can therefore update the
-pose head even on episodes with no camera-pose annotation.
+We use the explicit Plucker form as a minimally intrusive geometry interface:
+it augments RGB with pixel-aligned metric rays while leaving the encoder blocks
+and action decoder unchanged.  Downstream action and NVS losses can still shape
+the pose predictor through the ray-conditioned policy, so episodes without
+camera-pose annotation need not be discarded.
 
 \subsection{E2E Camera-Pose Action Policy}
 
@@ -95,16 +95,17 @@ variant, now conditioned on \(z_t^{\text{scene}}\).
 
 For the NVS objective, we randomly select a target view \(j\) and build its
 query rays from the \emph{predicted} target pose \(\hat{T}_{t,j}\) --- the same
-pose head applied to the held-out view --- together with its intrinsics.  Both
+pose head applied to the target view --- together with its intrinsics.  Both
 source- and target-view Plucker rays therefore come from predicted, not
 ground-truth, poses, so the reconstruction objective requires no
 camera-extrinsic labels: the target's RGB image is the only supervision it
 needs, which is what lets episodes without pose labels still contribute NVS
 gradients.
-To prevent trivial copying, the target observation is dropped from the
-scene-token encoder input during NVS training, forcing reconstruction from the
-remaining views.  The NVS decoder \(D_\omega\) uses target-ray tokens as queries
-and attends to the scene tokens:
+To reduce trivial copying, the target observation is stochastically masked from
+the scene-token encoder input during NVS training.  When the mask is active, the
+decoder must reconstruct the target view from the remaining views; otherwise the
+target view remains available as an observed input.  The NVS decoder \(D_\omega\)
+uses target-ray tokens as queries and attends to the scene tokens:
 \begin{equation}
 \hat{I}_{t,j} =
 D_\omega\left(R_t, P_{t,j}\right).
