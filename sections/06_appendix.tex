@@ -121,7 +121,7 @@ points per trial; full success requires all four blocks placed).
 
 \section{Camera-Pose Loss}
 
-Table~\ref{tab:appendix-cam-pose-loss} reports the camera-pose prediction
+\autoref{tab:appendix-cam-pose-loss} reports the camera-pose prediction
 metrics for the MimicGen E2E camera-pose NVS runs.  Each value is averaged over
 the last 10 logged W\&B points available for that metric.  The supervised pose
 loss is computed on pose-labeled episodes, while the visual pose-error metrics
@@ -147,7 +147,7 @@ are logged from held-out visualization rollouts.
 \section{LIBERO-MV Pose Accuracy vs.\ Label Ratio}
 \label{sec:appendix-pose-sweep}
 
-Table~\ref{tab:appendix-pose-sweep} reports the converged camera-pose error of
+\autoref{tab:appendix-pose-sweep} reports the converged camera-pose error of
 the coupled E2E policy at each label ratio of the LIBERO-MV Spatial sweep,
 alongside the decoupled supervised-only pose head, with the corresponding task
 success.  Each error is averaged over the last logged evaluation points.  Pose
@@ -192,13 +192,13 @@ pose head's predicted rays.
 \clearpage
 \section{Novel-View Synthesis Quality}
 
-Fig.~\ref{fig:appendix-nvs-quality} shows one validation NVS reconstruction
+\autoref{fig:appendix-nvs-quality} shows one validation NVS reconstruction
 example per MimicGen task.  Each strip contains the remaining source view, the
 ground-truth target view, and the predicted target view, after removing the
 duplicated target input from the raw W\&B visualization.
 
 To confirm the NVS branch learns a non-trivial scene representation rather than
-copying an input view, Table~\ref{tab:appendix-nvs-floor} compares its
+copying an input view, \autoref{tab:appendix-nvs-floor} compares its
 reconstructions against a copy-source-view floor (the non-target input view used
 directly as the prediction) on the Stack validation splits.  The decoder
 improves over the floor on both PSNR and LPIPS under the train-camera and the

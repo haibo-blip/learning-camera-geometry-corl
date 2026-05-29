@@ -22,7 +22,7 @@ contribute action loss but no pose loss.
 \paragraph{Pose-label sweep.}
 We vary the fraction of pose-labeled training episodes over
 \(\{10,30,50,80,100\}\%\), keeping unlabeled episodes in the behavior-cloning
-dataset.  Fig.~\ref{fig:libero} shows that 10\% pose labels already exceed the
+dataset.  \autoref{fig:libero} shows that 10\% pose labels already exceed the
 calibrated Plucker baseline (0.820 vs.\ 0.622), and the best E2E run matches the
 stronger calibrated PRoPE reference.  Across the sweep, success remains high
 (0.78--0.87) despite large differences in standalone pose error, suggesting that
@@ -58,7 +58,7 @@ evaluates on its own predicted rays, and reducing rotation error from
 MimicGen~\citep{mandlekar2023mimicgen} provides stronger episode-to-episode
 variation than LIBERO-MV.  We evaluate four tasks --- Stack, Stack Three, Coffee,
 and Threading --- under the training \texttt{train\_wide} camera distribution and
-a held-out \texttt{eval\_tight} distribution illustrated in Fig.~\ref{fig:overview}.
+a held-out \texttt{eval\_tight} distribution illustrated in \autoref{fig:overview}.
 Each camera setting uses 40 rollouts per evaluation checkpoint, and checkpoint
 selection is based on validation rollout success.  We compare to Diffusion
 Policy~\citep{chi2023diffusionpolicy} as an image baseline and
@@ -68,7 +68,7 @@ checkpoint selection is described in
 \autoref{sec:appendix-checkpoint-selection}.
 
 \paragraph{Results.}
-Fig.~\ref{fig:mimicgen-results} reports episode-level success.  The NVS policy
+\autoref{fig:mimicgen-results} reports episode-level success.  The NVS policy
 improves over the E2E camera-pose action policy by 13.1 points on train-camera
 evaluation and 23.1 points under tight-camera evaluation.  On Stack, it matches
 the action-only variant on train-camera evaluation at 97.5\% and improves
@@ -86,7 +86,7 @@ point-cloud methods in every shifted-camera regime.
   rates under the train-camera and tight-camera camera distributions; the shaded
   Mean group is the macro-average over the four displayed tasks. Diffusion Policy
   is an image baseline, ManiFlow is a point-cloud baseline, and the two E2E
-  variants match the model names in Fig.~\ref{fig:pipeline}.}
+  variants match the model names in \autoref{fig:pipeline}.}
   \label{fig:mimicgen-results}
 \end{figure}
 
@@ -115,7 +115,7 @@ camera-pose NVS policy uses pose labels for 50\% of training episodes and no
 calibration at inference.
 
 \paragraph{Results.}
-Table~\ref{tab:realworld} compares our coupled NVS policy against a calibrated
+\autoref{tab:realworld} compares our coupled NVS policy against a calibrated
 Plucker-GT reference and a decoupled Plucker-RayZer baseline.  Cup Stacking and
 Stand-up Cup use 20 trials each and Blocks-in-Bowl uses 10.  Against the
 decoupled calibration-free baseline, our policy is at least as strong on every

@@ -2,7 +2,7 @@ Our goal is to train an RGB policy that uses camera geometry without calibrated
 scene-camera extrinsics at test time.  A pose predictor estimates each input
 camera pose, differentiable ray construction converts the estimates into
 per-pixel Plucker features, and the downstream policy is trained end-to-end
-through those features.  Fig.~\ref{fig:pipeline} shows two variants: an
+through those features.  \autoref{fig:pipeline} shows two variants: an
 action-only policy trained with behavior cloning and pose supervision, and an
 NVS-regularized policy that reconstructs target views from latent scene tokens
 during training.  The NVS decoder is discarded at inference.
