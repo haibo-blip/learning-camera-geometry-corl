@@ -40,8 +40,10 @@ supervision is already useful: the 10\% setting already exceeds the calibrated
 Plucker baseline (0.820 vs.\ 0.622) and approaches the stronger calibrated PRoPE
 reference (0.842).  Second, although our ray construction follows
 the Plucker representation, and the calibrated Plucker baseline is weaker than
-PRoPE on Spatial, the best 50\% end-to-end setting exceeds the calibrated PRoPE
-reference.  This suggests that action loss can shape predicted geometry toward
+PRoPE on Spatial, end-to-end success stays high across the sweep (0.78--0.87),
+with the best setting matching the calibrated PRoPE reference; given single-seed
+noise we do not read the 50\% value as a true optimum.  This suggests that
+action loss can shape predicted geometry toward
 what the policy needs for control, rather than merely reproducing the calibrated
 geometry used by a fixed encoder.
 
@@ -56,7 +58,10 @@ geometry used by a fixed encoder.
 A natural alternative is to learn camera geometry \emph{outside} the control
 objective: train a pose head in isolation by supervised regression of the
 calibrated extrinsics, then plug its predictions into a frozen geometry-trained
-policy with no joint optimization.  Under the identical LIBERO-MV Spatial
+policy with no joint optimization.  This policy is trained on ground-truth poses
+and only sees the head's predictions at deployment, so it also incurs a
+train-test pose-distribution shift --- which, as we discuss below, is precisely
+what end-to-end coupling removes.  Under the identical LIBERO-MV Spatial
 protocol, this decoupled two-stage variant (the predicted-pose deployment of the
 calibrated Plucker policy) reaches \(0.660\) success using \emph{full} pose
 supervision, whereas our coupled E2E camera-pose action policy reaches
@@ -69,9 +74,16 @@ sweep (Table~\ref{tab:appendix-pose-sweep}): driving the coupled pose head from
 \(7.6^\circ\) error at 10\% labels down to \(0.16^\circ\) at 100\% --- a roughly
 \(48\times\) reduction --- moves Spatial success by under five points, and the
 decoupled head, more accurate than every partially-labeled coupled run, still
-gives the lowest success of all.  This dissociation is the central evidence for
-our claim: what helps control is not a metrically optimal pose, but geometry
-shaped by the control objective itself.
+gives the lowest success of all.  The sweep evidence is confound-free: each
+coupled run is both trained and evaluated on its own predicted poses, so the
+flat success despite a \(48\times\) error change isolates the effect cleanly.
+The mechanism the two results point to is consistency rather than accuracy:
+end-to-end coupling trains the policy on the same predicted geometry it uses at
+test, so it tolerates a less metrically accurate but in-distribution pose,
+whereas a decoupled policy trained on ground-truth poses is sensitive to the
+predicted-pose shift even when those predictions are more accurate.  What helps
+control is therefore geometry that is shaped by --- and consistent with --- the
+control objective, not a metrically optimal pose.
 
 \begin{table}[t]
   \centering
@@ -136,7 +148,12 @@ action-correlated appearance shortcuts, which raises in-distribution success;
 the larger tight-camera gain shows the benefit grows when those appearance
 shortcuts break as the camera moves.  On Stack, it matches the action-only
 variant on train-camera evaluation at 97.5\% success and improves tight-camera
-success from 2.5\% to 42.5\%.
+success from 2.5\% to 42.5\%.  Relative to the point-cloud ManiFlow baseline,
+the comparison is mixed rather than dominant: averaged over the four tasks our
+NVS policy leads on train-camera success (46.9\% vs.\ 34.4\%) but trails on
+tight-camera success (23.8\% vs.\ 31.9\%), so we do not claim to beat depth-based
+point clouds under camera shift --- only to be competitive from RGB alone,
+without depth or calibration at inference.
 
 \begin{figure}[t]
   \centering
@@ -190,24 +207,28 @@ Table~\ref{tab:realworld} compares our coupled NVS policy against two references
 on the same platform: a calibrated Plucker-GT upper bound that uses full
 per-episode calibration, and a decoupled Plucker-RayZer baseline that --- like
 ours --- predicts camera pose at inference, but trains the pose head in
-isolation from a frozen policy.  Against the decoupled, calibration-free
-baseline, the natural apples-to-apples comparison, our policy wins on every task
-(Cup Stacking 85 vs.\ 80, Stand-up Cup 75 vs.\ 55, Blocks-in-Bowl 100 vs.\ 30;
-$+31.7$ points on average), mirroring the coupled-versus-decoupled gap seen on
-LIBERO-MV.  It also exceeds the calibrated Plucker-GT upper bound in aggregate
-($86.7$ vs.\ $70.0$ mean success) despite using only half the pose labels and no
-inference calibration, trailing it only on Cup Stacking, where the calibrated
-reference is already saturated at $100\%$.
+isolation from a frozen policy.  Cup Stacking and Stand-up Cup use 20 trials
+each and Blocks-in-Bowl uses 10.  Against the decoupled, calibration-free
+baseline --- the natural apples-to-apples comparison --- our policy is at least
+as strong on every task and wins decisively on two (Stand-up Cup 75 vs.\ 55,
+Blocks-in-Bowl 100 vs.\ 30), with a narrow one-trial edge on Cup Stacking
+(85 vs.\ 80, i.e.\ $17/20$ vs.\ $16/20$); the mean gap is $+31.7$ points,
+mirroring the coupled-versus-decoupled gap seen on LIBERO-MV.  It also exceeds
+the calibrated Plucker-GT reference in aggregate ($86.7$ vs.\ $70.0$ mean
+success) despite using only half the pose labels and no inference calibration,
+though this aggregate is driven mainly by Blocks-in-Bowl ($100$ vs.\ $50$);
+on Cup Stacking the calibrated reference is saturated at $100\%$ and wins.
 
 \begin{table}[t]
   \centering
-  \caption{Real-world matched comparison on the same platform, rig, rubrics, and
-  trial counts. \texttt{Plucker-GT}: full per-episode calibration at train and
-  test (calibrated upper bound). \texttt{Plucker-RayZer}: decoupled
-  supervised-only pose head plugged into a frozen policy, calibration-free at
-  inference. \texttt{Ours}: coupled E2E NVS policy, 50\% pose labels,
-  calibration-free at inference. Cells are full-task success / rubric-weighted
-  progress (\%); best success per row in bold.}
+  \caption{Real-world matched comparison on the same platform, rig, and rubrics.
+  Trial counts: Cup Stacking and Stand-up Cup 20 each, Blocks-in-Bowl 10.
+  \texttt{Plucker-GT}: full per-episode calibration at train and test (calibrated
+  reference). \texttt{Plucker-RayZer}: decoupled supervised-only pose head
+  plugged into a frozen policy, calibration-free at inference. \texttt{Ours}:
+  coupled E2E NVS policy, 50\% pose labels, calibration-free at inference. Cells
+  are full-task success / rubric-weighted progress (\%); best success per row in
+  bold.}
   \label{tab:realworld}
   \begin{tabular}{lccc}
     \toprule

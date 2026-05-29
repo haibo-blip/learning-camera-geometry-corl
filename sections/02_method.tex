@@ -136,8 +136,14 @@ z_t^{\text{scene}} = \text{concat}(R_t, q_t, c), \qquad
 \mathcal{L}_{\text{flow}}(g_\psi, z_t^{\text{scene}}, A_t).
 \end{equation}
 
-For the NVS objective, we randomly select a target camera \(j\) and provide the
-decoder with the target pose and intrinsics through target-view Plucker rays.
+For the NVS objective, we randomly select a target view \(j\) and build its
+query rays from the \emph{predicted} target pose \(\hat{T}_{t,j}\) --- the same
+pose head applied to the held-out view --- together with its intrinsics.  Both
+source- and target-view Plucker rays therefore come from predicted, not
+ground-truth, poses, so the reconstruction objective requires no
+camera-extrinsic labels: the target's RGB image is the only supervision it
+needs, which is what lets episodes without pose labels still contribute NVS
+gradients.
 To prevent trivial copying, the target view's encoder input is masked with
 probability \(p_{\text{drop}}\), so the decoder must reconstruct the target
 image from the remaining scene evidence stored in the scene tokens.  The NVS
