@@ -77,22 +77,9 @@ action chunk from the action decoder.
 
 \subsection{E2E Camera-Pose NVS Policy}
 
-Action loss is a weak constraint on what the observation encoder must preserve.
-The encoder is only penalized for features that change the predicted action;
-layout in unviewed regions, occluded surfaces, and cross-view consistency can be
-discarded without cost.  Under camera-distribution shift this is fragile:
-features dropped at training time because they did not change the immediate
-action may carry the only signal for a relation that now matters under a shifted
-view.  We add novel-view synthesis as a \emph{renderability prior} on the
-observation representation: if a held-out target view can be reconstructed from
-the latent, the latent must preserve enough 3D layout to support an arbitrary
-camera query.  This is a softer constraint than maintaining an explicit point
-cloud or voxel grid --- only renderability, not metric reconstruction --- but
-stronger than action loss alone.  The NVS decoder is discarded at inference, so
-deployment cost is unchanged.
+Action loss is a weak constraint on what the observation encoder must preserve. The encoder is only penalized for features that change the predicted action; layout in unviewed regions, occluded surfaces, and cross-view consistency can be discarded without cost. Under camera-distribution shift this is fragile: features dropped at training time because they did not change the immediate action may carry the only signal for a relation that now matters under a shifted view. We add novel-view synthesis as a \emph{renderability prior} on the observation representation: if a held-out target view can be reconstructed from the latent, the latent must preserve enough 3D layout to support an arbitrary camera query. This is a softer constraint than maintaining an explicit point cloud or voxel grid --- only renderability, not metric reconstruction --- but stronger than action loss alone. The NVS decoder is discarded at inference, so deployment cost is unchanged.
 
-A separate encoder maps source views and their predicted
-ray features into latent scene tokens:
+A separate encoder maps source views and their predicted ray features into latent scene tokens:
 \begin{equation}
 R_t = F_\theta\left(\{I_{t,i},P_{t,i}\}_{i=1}^{N}\right),
 \qquad R_t\in\mathbb{R}^{M\times D}.
