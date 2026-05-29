@@ -1,8 +1,9 @@
 \paragraph{RGB and 3D policy representations.}
 RGB imitation policies pair image encoders with diffusion or flow-style action
-decoders~\citep{chi2023diffusionpolicy,yan2025maniflow}.  Explicit 3D policies
-instead use voxel or point-cloud inputs~\citep{ze2024dp3,yan2025maniflow,wang2024equidiff,zhao2025hep},
-which expose spatial structure but require depth, calibration, and 3D-specific
+decoders, or with equivariant RGB encoders~\citep{chi2023diffusionpolicy,yan2025maniflow,klee2026raven,hu2025spherical}.
+Explicit 3D policies instead use voxel, point-cloud, object-centric, ray-based,
+or spherical-projected inputs~\citep{shridhar2023peract,goyal2023rvt,ze2024dp3,ke2024dda,yan2025maniflow,peri2024pcwm,wang2024equidiff,zhao2025hep,zhu2026equact,zhao2025gsl,klee2026raven,hu2025spherical},
+which expose spatial structure but often require depth, calibration, or 3D-specific
 encoders.  We keep the RGB-policy interface and learn camera geometry inside
 the control objective.
 
@@ -22,8 +23,8 @@ policy, so action and NVS losses shape the geometry used at inference.
 
 \paragraph{View synthesis and camera-pose estimation.}
 Ray- and pose-conditioned view-synthesis models learn renderable scene
-representations~\citep{mildenhall2020nerf,sajjadi2022srt,jin2024lvsm}, sometimes
-with cameras inferred during reconstruction~\citep{jiang2025rayzer}.  We use
+representations~\citep{mildenhall2020nerf,sajjadi2022srt,jin2024lvsm,kim2026svsm,mitchel2026xfactor},
+sometimes with cameras inferred or predicted from images~\citep{jiang2025rayzer,zhang2024camerasasrays,wang2024dust3r,leroy2024mast3r,wang2025vggt}.  We use
 target-view reconstruction only as a training-time regularizer for control: the
 NVS decoder is discarded at inference, while the scene tokens remain for action
 prediction.

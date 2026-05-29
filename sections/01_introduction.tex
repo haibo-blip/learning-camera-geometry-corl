@@ -1,5 +1,5 @@
 RGB visuomotor policies can map image observations and proprioception to action
-chunks with diffusion or flow-style decoders~\citep{chi2023diffusionpolicy,yan2025maniflow},
+chunks with diffusion, flow-style, or equivariant decoders~\citep{chi2023diffusionpolicy,yan2025maniflow,klee2026raven,hu2025spherical},
 but they usually leave camera geometry implicit.  As cameras move, the same
 object relation appears at different image locations and occlusion or contact
 cues may be visible only from certain views.  Image-only policies can therefore
@@ -7,11 +7,11 @@ learn view-specific shortcuts that weaken under camera shift.
 
 Explicit geometry helps, but it raises the data requirement.  Calibrated
 camera-aware RGB policies expose Plucker rays or pose encodings to the
-encoder~\citep{anonymous2026cameraaware}; point-cloud policies expose spatial
-structure through depth and calibration~\citep{ze2024dp3}.  Demonstrations
-without extrinsics cannot directly supply those geometric features, and
-point-cloud pipelines additionally require depth and modality-specific 3D
-encoders.
+encoder~\citep{anonymous2026cameraaware}; point-cloud, voxel, and
+object-centric 3D policies expose spatial structure through depth, calibration,
+or structured 3D representations~\citep{shridhar2023peract,goyal2023rvt,ze2024dp3,ke2024dda,yan2025maniflow,peri2024pcwm,zhu2026equact,zhao2025gsl}.  Demonstrations
+without extrinsics cannot directly supply those geometric features, and many 3D
+pipelines additionally require depth and modality-specific encoders.
 
 We ask whether camera geometry can be learned inside the control objective
 instead of provided as fixed metadata.  A pose predictor estimates camera
