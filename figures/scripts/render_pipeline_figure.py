@@ -330,8 +330,8 @@ def main():
     rounded((88, 318, 778, 910), r=22, fill="#fbfdff", outline=C_LINE, width=3)
     paste_cover(scene_crop, (112, 346, 754, 882), radius=16)
     for box, label, col, im in [
-        ((88, 1010, 420, 1510), "View A", C_TEAL, view_a),
-        ((448, 1010, 778, 1510), "View B", C_RED, view_b),
+        ((88, 1010, 420, 1510), "Source view", C_TEAL, view_a),
+        ((448, 1010, 778, 1510), "Target view", C_RED, view_b),
     ]:
         rounded(box, r=20, fill="#fbfdff", outline=C_LINE, width=3)
         x0, y0, x1, y1 = box
