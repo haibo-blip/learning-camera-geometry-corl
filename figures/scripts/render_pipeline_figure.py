@@ -223,18 +223,34 @@ def scene_token_glyph(box, label, stroke=C_TEAL, fill="#def7e3", label_size=22):
         text_fit_center(((x0 + x1) / 2, y1 - 23), label, label_size, (x1 - x0) - 18, fill=stroke, bold=True)
 
 
-def plucker(size=(330, 185), phase=0.0):
+def plucker(size=(330, 185), phase=0.0, variant="A"):
     w, h = size
     yy, xx = np.mgrid[0:h, 0:w]
-    cx = w * (0.50 + 0.018 * math.sin(phase * 11.0))
-    cy = h * (0.52 + 0.014 * math.cos(phase * 13.0))
+    if variant == "A":
+        cx = w * (0.44 + 0.018 * math.sin(phase * 11.0))
+        cy = h * (0.48 + 0.014 * math.cos(phase * 13.0))
+        hue_base = 0.48
+        ray_sat = 0.82
+        ring_color = (255, 255, 255, 78)
+    else:
+        cx = w * (0.59 + 0.015 * math.cos(phase * 9.0))
+        cy = h * (0.56 + 0.018 * math.sin(phase * 15.0))
+        hue_base = 0.02
+        ray_sat = 0.90
+        ring_color = (255, 244, 232, 95)
     nx = (xx - cx) / max(1.0, w * 0.5)
     ny = (yy - cy) / max(1.0, h * 0.5)
     radius = np.clip(np.sqrt(nx * nx + ny * ny), 0.0, 1.2)
     angle = np.arctan2(ny, nx)
-    hue = (angle / (2 * np.pi) + 0.58 + phase * 0.23) % 1.0
+    if variant == "A":
+        hue = (angle / (2 * np.pi) * 0.55 + hue_base + phase * 0.18) % 1.0
+        texture = 0.035 * np.cos(18.0 * radius - phase * 8.0)
+    else:
+        diagonal = (xx / max(1, w) * 0.75 + yy / max(1, h) * 0.25)
+        hue = (hue_base + 0.14 * np.sin(angle * 2.0 + phase * 5.0) + 0.08 * diagonal) % 1.0
+        texture = 0.045 * np.sin((xx + 1.35 * yy) * 0.055 + phase * 12.0)
     sat = np.clip(0.58 + 0.34 * radius, 0.0, 1.0)
-    val = np.clip(0.98 - 0.16 * radius + 0.035 * np.cos(18.0 * radius - phase * 8.0), 0.0, 1.0)
+    val = np.clip(0.98 - 0.16 * radius + texture, 0.0, 1.0)
     arr = np.zeros((h, w, 3), dtype=np.uint8)
     for y in range(h):
         for x in range(w):
@@ -244,13 +260,17 @@ def plucker(size=(330, 185), phase=0.0):
     layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     od = ImageDraw.Draw(layer)
 
-    # Perspective-style ray map: all pixel rays share the same camera center and
-    # fan outward to image-plane directions.
+    # Perspective-style ray maps. A and B use intentionally different visual
+    # structure so the paper figure does not read them as duplicated tiles.
     max_r = int(math.hypot(w, h))
-    for frac in (0.24, 0.48, 0.72, 0.96):
-        rx = max_r * frac * 0.50
-        ry = max_r * frac * 0.32
-        od.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), outline=(255, 255, 255, 78), width=2)
+    if variant == "A":
+        for frac in (0.24, 0.48, 0.72, 0.96):
+            rx = max_r * frac * 0.50
+            ry = max_r * frac * 0.32
+            od.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), outline=ring_color, width=2)
+    else:
+        for offset in range(-h, w + h, max(22, w // 12)):
+            od.line((offset, h + 8, offset + h * 1.35, -8), fill=ring_color, width=2)
 
     def edge_point(theta, margin=7):
         c, s = math.cos(theta), math.sin(theta)
@@ -262,13 +282,17 @@ def plucker(size=(330, 185), phase=0.0):
         t = min(t for t in ts if t > 0)
         return cx + t * c, cy + t * s
 
-    ray_count = 22
+    ray_count = 22 if variant == "A" else 16
     for i in range(ray_count):
-        theta = 2 * math.pi * i / ray_count + phase * 1.7
+        if variant == "A":
+            theta = 2 * math.pi * i / ray_count + phase * 1.7
+        else:
+            theta = -0.85 + (1.70 * i / max(1, ray_count - 1)) + phase * 0.35
         ex, ey = edge_point(theta)
-        rr, gg, bb = colorsys.hsv_to_rgb((theta / (2 * math.pi) + 0.58 + phase * 0.23) % 1.0, 0.82, 0.55)
-        col = (int(rr * 255), int(gg * 255), int(bb * 255), 178)
-        width = 3 if w >= 300 else 2
+        rr, gg, bb = colorsys.hsv_to_rgb((theta / (2 * math.pi) + hue_base + phase * 0.23) % 1.0, ray_sat, 0.55)
+        alpha = 178 if variant == "A" else 205
+        col = (int(rr * 255), int(gg * 255), int(bb * 255), alpha)
+        width = (3 if w >= 300 else 2) if variant == "A" else (4 if w >= 300 else 3)
         od.line((cx, cy, ex, ey), fill=col, width=width)
         ux, uy = math.cos(theta), math.sin(theta)
         px, py = -uy, ux
@@ -278,8 +302,9 @@ def plucker(size=(330, 185), phase=0.0):
         p2 = (ex - ux * head - px * head * 0.44, ey - uy * head - py * head * 0.44)
         od.polygon((tip, p1, p2), fill=col)
 
-    od.ellipse((cx - 9, cy - 9, cx + 9, cy + 9), fill=(255, 255, 255, 245), outline=(30, 42, 58, 220), width=3)
-    od.ellipse((cx - 3, cy - 3, cx + 3, cy + 3), fill=(30, 42, 58, 235))
+    center_outline = (23, 83, 92, 230) if variant == "A" else (128, 46, 42, 230)
+    od.ellipse((cx - 9, cy - 9, cx + 9, cy + 9), fill=(255, 255, 255, 245), outline=center_outline, width=3)
+    od.ellipse((cx - 3, cy - 3, cx + 3, cy + 3), fill=center_outline)
     return Image.alpha_composite(out.convert("RGBA"), layer).convert("RGB")
 
 
@@ -289,8 +314,8 @@ def main():
     view_b = Image.open(ASSETS / "inputB_direct.png").convert("RGB")
     scene_crop = teaser.crop((120, 95, 2050, 950))
     action_crop = teaser.crop((2200, 1375, 3380, 1810))
-    ray_a = plucker((420, 235), 0.03)
-    ray_b = plucker((420, 235), 0.42)
+    ray_a = plucker((420, 235), 0.03, "A")
+    ray_b = plucker((420, 235), 0.42, "B")
 
     d.text((58, 42), "End-to-end camera-pose policy variants", font=F_TITLE, fill=C_TEXT)
     d.text((62, 124), "Each model predicts camera pose inside the policy; action and NVS losses train the geometry module jointly with the encoder.", font=F_SUB, fill=C_MUTED)
